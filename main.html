@@ -523,6 +523,8 @@
         @media (min-width: 769px) {
             #pcLayout {
                 display: block;
+                overflow-y: auto !important;
+                height: 100vh !important;
             }
             #mobileLayout {
                 display: none;
@@ -534,158 +536,55 @@
 
         /* ========== 手机端完整样式 ========== */
         @media (max-width: 768px) {
-            #pcLayout {
-                display: none;
-            }
+            /* 强制手机端样式 */
             #mobileLayout {
-                display: block;
-            }
-            .bottom-nav {
-                display: flex;
-            }
-
-            /* 隐藏原来的侧边栏 */
-            .sidebar {
-                position: fixed;
-                top: 60px;
-                left: 0;
-                width: 100%;
-                height: calc(100% - 120px);
-                overflow-y: auto;
-                display: none;
-                z-index: 100;
-                background: white;
+                display: block !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 60% !important;
+                background: white !important;
+                z-index: 9999 !important;
+                overflow: auto !important;
             }
             
-            .sidebar.active {
-                display: block;
-            }
-            
-            /* 地图区域 */
             #map {
-                position: fixed;
-                top: 60px;
-                left: 0;
-                width: 100%;
-                height: calc(100% - 120px);
-                z-index: 1;
-                transition: all 0.3s ease;
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 40% !important;
+                z-index: 1 !important;
             }
             
-            /* 地图全屏模式（路线规划时） */
-            #map.fullscreen {
-                height: calc(100% - 60px);
-                z-index: 10;
-            }
-            
-            /* 顶部标题栏 */
-            .top-header {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 60px;
-                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0 16px;
-                z-index: 1001;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-            
-            .top-header .title {
-                font-size: 16px;
-                font-weight: 500;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-            
-            .top-header .back-btn {
-                background: rgba(255,255,255,0.2);
-                border: none;
-                color: white;
-                font-size: 18px;
-                width: 36px;
-                height: 36px;
-                border-radius: 18px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                min-height: auto;
-            }
-            
-            .top-header .back-btn:active {
-                transform: scale(0.95);
+            /* 隐藏 PC 端侧边栏 */
+            #pcLayout {
+                display: none !important;
             }
             
             /* 底部导航栏 */
             .bottom-nav {
+                display: flex !important;
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                height: 60px;
+                height: 56px;
                 background: white;
-                display: flex;
-                justify-content: space-around;
-                align-items: center;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-                z-index: 1000;
                 border-top: 1px solid #eee;
-            }
-            
-            .nav-item {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 8px 0;
-                cursor: pointer;
-                transition: 0.2s;
-                background: none;
-                border: none;
-                min-height: auto;
-            }
-            
-            .nav-item:active {
-                transform: none;
-            }
-            
-            .nav-icon {
-                font-size: 22px;
-                margin-bottom: 2px;
-            }
-            
-            .nav-label {
-                font-size: 10px;
-                color: #666;
-            }
-            
-            .nav-item.active .nav-label {
-                color: #2196F3;
-                font-weight: 500;
-            }
-            
-            .nav-item.active .nav-icon {
-                color: #2196F3;
+                z-index: 1000;
             }
             
             /* 页面容器 */
             .page-container {
-                padding: 16px;
-                height: 100%;
-                overflow-y: auto;
+                padding: 12px;
+                background: white;
             }
             
-            /* 结果区域 */
-            .result-area {
-                max-height: 200px;
-                overflow-y: auto;
+            /* 增大按钮 */
+            button {
+                min-height: 44px;
             }
         }
 
@@ -891,6 +790,8 @@
         </div>
     </div>
     <!-- ========== 手机端展示 ========== -->
+    <div id="map"></div>
+
     <div id="mobileLayout" style="display: none;">
         <!-- ========== 景点管理页面 ========== -->
         <div id="spotsPage" class="page-container" style="display: block;">
@@ -1064,8 +965,6 @@
             </div>
         </div>
     </div>
-
-    <div id="map"></div>
 
     <script>
         // ==================== 请替换成你的百度地图 AK ====================
