@@ -1,0 +1,3476 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>智能行程规划助手 - 景点距离计算与路线优化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 新增：强制 strong 不换行 */
+        strong {
+            display: inline !important;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            font-family: 'Microsoft YaHei', '微软雅黑', 'PingFang SC', Arial, sans-serif;
+            background: #f0f2f5;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .header h1 span {
+            color: #4CAF50;
+        }
+
+        .header .subtitle {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-left: 15px;
+        }
+
+        /* 左侧面板 */
+        .sidebar {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            bottom: 0;
+            width: 380px;
+            background: white;
+            z-index: 1000;
+            box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 右侧地图 */
+        #map {
+            position: absolute;
+            top: 60px;
+            left: 380px;
+            right: 0;
+            bottom: 0;
+        }
+
+        /* 滚动区域 */
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* 模块样式 */
+        .module {
+            margin-bottom: 24px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .module:last-child {
+            border-bottom: none;
+        }
+
+        .module-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .module-title .icon {
+            font-size: 20px;
+        }
+
+        /* 搜索区域 */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76,175,80,0.1);
+        }
+
+        .search-box button {
+            padding: 10px 18px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .search-box button:hover {
+            background: #0b7dda;
+            transform: translateY(-1px);
+        }
+
+        /* 搜索结果 */
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        .search-result-item {
+            padding: 10px 12px;
+            margin: 4px 6px;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #eee;
+        }
+
+        .search-result-item:hover {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+            transform: translateX(2px);
+        }
+
+        .search-result-item strong {
+            font-size: 13px;
+            color: #333;
+        }
+
+        .search-result-item .address {
+            font-size: 11px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        /* 景点列表样式优化 */
+        .spot-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .spot-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            margin: 4px 0;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            transition: all 0.2s;
+        }
+
+        .spot-item:hover {
+            border-color: #2196F3;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .spot-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spot-name .idx {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 22px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .spot-item button {
+            padding: 4px 12px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: 0.2s;
+        }
+
+        .spot-item button:hover {
+            background: #d32f2f;
+            transform: scale(0.98);
+        }
+
+        /* 按钮组 */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-group button {
+            flex: 1;
+            padding: 8px;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .btn-info {
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-info:hover {
+            background: #0b7dda;
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-warning:hover {
+            background: #e68900;
+            transform: translateY(-1px);
+        }
+
+        .btn-gray {
+            background: #757575;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .btn-gray:hover {
+            background: #616161;
+        }
+
+        /* 下拉框 */
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            outline: none;
+        }
+
+        select:focus {
+            border-color: #4CAF50;
+        }
+
+        /* 周边搜索二级框样式 */
+        .main-type-item:hover {
+            background: #f5f5f5;
+        }
+        .main-type-item.active {
+            background: #e3f2fd;
+            color: #2196F3;
+        }
+        .sub-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .sub-menu-item:hover {
+            background: #f5f5f5;
+        }
+        .sub-menu-item.selected {
+            background: #e3f2fd;
+            color: #2196F3;
+        }
+
+        .sub-menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        /* 分类标签样式 */
+        .subtype-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .subtype-tag:hover {
+            background: #e0e0e0;
+        }
+        .subtype-tag.active {
+            background: #2196F3;
+            color: white;
+        }
+
+        /* 结果显示区 */
+        .result-area {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .result-area strong {
+            color: #333;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .distance-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .distance-table th,
+        .distance-table td {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .distance-table th {
+            background: #f0f0f0;
+            font-weight: 600;
+        }
+
+        .tip {
+            font-size: 11px;
+            color: #999;
+            margin-top: 10px;
+            text-align: center;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+
+        .loading {
+            color: #2196F3;
+            font-style: italic;
+        }
+
+        .error {
+            color: #f44336;
+        }
+
+        .empty-tip {
+            color: #999;
+            text-align: center;
+            padding: 15px;
+            font-size: 12px;
+        }
+
+        /* 滚动条 */
+        .sidebar-content::-webkit-scrollbar,
+        .search-results::-webkit-scrollbar,
+        .spot-list::-webkit-scrollbar,
+        .result-area::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track,
+        .search-results::-webkit-scrollbar-track,
+        .spot-list::-webkit-scrollbar-track,
+        .result-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb,
+        .search-results::-webkit-scrollbar-thumb,
+        .spot-list::-webkit-scrollbar-thumb,
+        .result-area::-webkit-scrollbar-thumb {
+            background: #bbb;
+            border-radius: 3px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb:hover,
+        .search-results::-webkit-scrollbar-thumb:hover,
+        .spot-list::-webkit-scrollbar-thumb:hover,
+        .result-area::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        /* 围栏相关样式 */
+        .fence-instruction {
+            background: #2196F3;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .fence-points {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗺️ 智能<span>行程规划助手</span></h1>
+        <div class="subtitle">景点搜索 · 距离计算 · 路线优化</div>
+    </div>
+    <div class="sidebar">
+        <div class="sidebar-content">
+            <!-- 搜索添加景点模块 -->
+            <div class="module">
+                <div class="module-title">
+                    <span class="icon">🔍</span>
+                    <span>搜索添加景点</span>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="searchKeyword" placeholder="输入景点名称，如：天安门、故宫...">
+                    <button id="searchBtn">搜索</button>
+                </div>
+                <div id="searchResults" class="search-results">
+                    <div class="empty-tip">✨ 输入关键词，搜索景点并添加到列表</div>
+                </div>
+            </div>
+
+            <!-- 已添加景点模块 -->
+            <div class="module">
+                <div class="module-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span class="icon">📋</span>
+                        <span>已添加景点 <span id="spotCount">(0)</span></span>
+                    </div>
+                    <button class="btn-info" id="toggleMapPickBtn" style="width: auto; padding: 4px 12px; margin: 0; font-size: 12px;">📍 地图选点</button>
+                </div>
+                <div id="pickStatus" style="display: none; background: #FF9800; color: white; padding: 6px; border-radius: 6px; font-size: 12px; text-align: center; margin-bottom: 8px;">
+                    🔍 地图选点模式已开启，点击地图任意位置添加景点
+                </div>
+                <div id="spotListContainer" class="spot-list">
+                    <div class="empty-tip">暂无景点，请搜索添加</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn-gray" id="clearAllSpotsBtn">🗑️ 清空所有</button>
+                    <button class="btn-gray" id="resetStorageBtn">🔄 重置存储</button>
+                </div>
+            </div>
+
+            <!-- 路线规划模块 -->
+            <div class="module">
+                <div class="module-title">
+                    <span class="icon">🚗</span>
+                    <span>路线规划</span>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">起点</label>
+                    <select id="startPoint">
+                        <option value="">请选择起点</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">终点</label>
+                    <select id="endPoint">
+                        <option value="">请选择终点</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">出行方式</label>
+                    <select id="travelMode" style="width: 100%; padding: 8px 10px;">
+                        <option value="driving">🚗 驾车</option>
+                        <option value="transit">🚌 公交/地铁</option>
+                        <option value="walking">🚶 步行</option>
+                        <!-- <option value="biking">🚲 骑行</option> -->
+                    </select>
+                </div>
+
+
+                <div style="display: flex;  gap: 10px;">
+                    <button class="btn-primary" id="calcDistanceBtn" style="width: 50%;">🚗 查看路线</button>
+                    <button class="btn-gray" id="clearLinesBtn" style="width: 50%;">🗑️ 清除路线</button>
+                </div>
+
+            </div>
+
+            <!-- 优化路线模块 -->
+            <div class="module">
+                <div class="module-title">
+                    <span class="icon">🎯</span>
+                    <span>优化行程</span>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 13px; color: #555;">起点：</label>
+                    <select id="optimizeStartPoint" style="width: 100%; padding: 6px;">
+                        <option value="">请选择起点</option>
+                    </select>
+                </div>
+                <!-- 标题放在外面，不参与滚动 -->
+                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: #2196F3; font-weight: 500;">📌 勾选以下景点参与路线优化：</span>
+                    <label style="cursor: pointer; font-size: 11px; color: #666; display: flex; align-items: center; gap: 3px;">
+                        <input type="checkbox" id="selectAllCheckbox" style="margin: 0;"> 全选
+                    </label>
+                </div> 
+               <!-- 可滚动的复选框列表 -->
+                <div id="optimizeSpotList" style="max-height: 150px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; padding: 6px; margin-bottom: 10px;">
+                    <!-- 动态生成景点复选框 -->
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-info" id="calcAllBtn" style="flex: 1;">🎯优化路线</button>
+                    <button class="btn-gray" id="clearOptimizeLine" style="flex: 1;">🗑️ 清除路线</button>
+                </div>
+            </div>
+
+            <!-- 周边搜索模块 -->
+            <div class="module">
+                <div class="module-title">
+                    <span class="icon">🔍</span>
+                    <span>周边搜索</span>
+                </div>
+                
+                <!-- 一级下拉框 -->
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 13px; color: #555;">搜索类型：</label>
+                    <select id="searchMainType" style="width: 100%; padding: 8px; margin-top: 4px;">
+                        <option value="hotel">🏨 酒店</option>
+                        <option value="food">🍜 美食</option>
+                        <option value="attraction">🏞️ 景点</option>
+                    </select>
+                </div>
+                
+                <!-- 搜索半径 -->
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 13px; color: #555;">搜索半径：</label>
+                    <select id="searchRadius" style="width: 100%; padding: 8px; margin-top: 4px;">
+                        <option value="500">500米</option>
+                        <option value="1000">1公里</option>
+                        <option value="3000">3公里</option>
+                        <option value="5000">5公里</option>
+                        <option value="10000">10公里</option>
+                    </select>
+                </div>
+                
+                <!-- 中心点选择 -->
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 13px; color: #555;">中心点：</span>
+                        <button id="startMapPickBtn" style="padding: 4px 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">📍 地图选点</button>
+                    </div>
+                    <div id="selectedPointInfo" style="font-size: 11px; color: #4CAF50; margin-top: 6px; display: none;"></div>
+                    <select id="searchCenterSpot" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; margin-top: 8px;">
+                        <option value="">或从景点选择</option>
+                    </select>
+                </div>               
+                <!-- 操作按钮 -->
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-primary" id="searchNearbyBtn" style="flex: 1;">🔍 开始搜索</button>
+                    <button class="btn-gray" id="clearSearchResultsBtn" style="flex: 1;">🗑️ 清除结果</button>
+                </div>
+
+            </div>
+
+            <!-- 右侧二级菜单浮层 -->
+            <div id="subTypeMenu" style="position: fixed; left: 300px; top: 300px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 2000; min-width: 150px; display: none; overflow: hidden;">
+                <div style="background: #f5f5f5; padding: 8px 12px; font-weight: 600; font-size: 12px; border-bottom: 1px solid #eee;" id="subMenuTitle">酒店分类</div>
+                <div id="subMenuItems" style="padding: 8px 0;">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 结果显示模块 -->
+            <div class="module">
+                <div class="module-title">
+                    <span class="icon">📋</span>
+                    <span>路线概况</span>
+                </div>
+                <div id="distanceResult" class="tip" style="text-align: left;">
+                    <strong>💡 提示：</strong>请先添加景点，然后选择起点和终点;点击地图标记查看详情，橙色线为直线距离 <br> 
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="map"></div>
+
+    <script>
+        // ==================== 请替换成你的百度地图 AK ====================
+        // 浏览器端 AK（用于地图显示）- 保持不变
+        var BAIDU_API_KEY = 'FYugigEWwXbDwzhQn4gVYlz00FXQRsNc';   // ⬅️ 这里改成你自己的
+        // 服务端 AK（用于获取路线数据）- 需要你单独申请
+        var BAIDU_SERVER_AK = 'X5WPPIRe8wRkLTGMJNntbuv7TPgNgjgo';
+        // ================================================================
+
+        var map;
+        var markersData = [];
+        var distanceMatrix = [];
+        var markers = [];
+        var localSearch = null;
+        var currentSearchCenter = null;  // 当前搜索中心点
+        var searchMarkers = [];          // 搜索结果的标记
+        var selectedSubTypes = [];  // 放在其他全局变量附近
+        var markersVisible = false;  // 标记是否显示在地图上
+        var currentSearchPois = [];  // 存储当前搜索的POI
+        var currentSearchMainType = '';  // 当前搜索类型
+        var isPickingLocation = false;  // 是否处于地图选点模式
+        var currentPickedMarker = null; // 当前选中的临时标记
+
+
+        // 分类映射（用于周边搜索的二级分类）
+        var categoryMap = {
+            hotel: {
+                name: '酒店',
+                icon: '🏨',
+                subTypes: [
+                    { value: '民宿', label: '🏠 民宿' },
+                    { value: '经济型酒店', label: '💰 经济型酒店' },
+                    { value: '如家|汉庭|7天|锦江之星|全季|亚朵|维也纳|桔子|丽枫', label: '🏨 连锁酒店' },
+                    { value: '青年旅社', label: '🎒 青年旅社' },
+                    { value: '公寓', label: '🏢 公寓' },
+                ]
+            },
+            food: {
+                name: '美食',
+                icon: '🍜',
+                subTypes: [
+                    { value: '火锅', label: '🍲 火锅' },
+                    { value: '烧烤', label: '🍖 烧烤' },
+                    { value: '川菜', label: '🌶️ 川菜' },
+                    { value: '粤菜', label: '🥟 粤菜' },
+                    { value: '日料', label: '🍣 日料' },
+                    { value: '韩餐', label: '🍗 韩餐' },
+                    { value: '西餐', label: '🍴 西餐' },
+                    { value: '快餐', label: '🍔 快餐' },
+                    { value: '小吃', label: '🍢 小吃' },
+                    { value: '咖啡厅', label: '☕ 咖啡厅' },
+                    { value: '茶馆', label: '🍵 茶馆' }
+                ]
+            },
+            attraction: {
+                name: '景点',
+                icon: '🏞️',
+                subTypes: [
+                    { value: '自然风光', label: '⛰️ 自然风光' },
+                    { value: '名胜古迹', label: '🏛️ 名胜古迹' },
+                    { value: '博物馆', label: '🏺 博物馆' },
+                    { value: '寺庙', label: '🙏 寺庙' },
+                    { value: '公园', label: '🌳 公园' },
+                    { value: '古镇', label: '🏘️ 古镇' },
+                    { value: '主题乐园', label: '🎢 主题乐园' },
+                    { value: '动物园', label: '🐼 动物园' },
+                    { value: '植物园', label: '🌸 植物园' },
+                    { value: '美术馆', label: '🎨 美术馆' },
+                    { value: '纪念馆', label: '📜 纪念馆' },
+                    { value: '登山', label: '🧗 登山' },
+                    { value: '徒步', label: '🥾 徒步' },
+                    { value: '露营', label: '🏕️ 露营' }
+                ]
+            }
+        };
+
+        // 直线距离（Haversine，单位 km）
+        function getStraightDistance(lat1, lng1, lat2, lng2) {
+            var rad = Math.PI / 180;
+            var dlat = (lat2 - lat1) * rad;
+            var dlng = (lng2 - lng1) * rad;
+            var a = Math.sin(dlat / 2) ** 2 +
+                    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+                    Math.sin(dlng / 2) ** 2;
+            return 6371 * 2 * Math.asin(Math.sqrt(a));
+        }
+
+        // 驾车距离
+        function getDrivingDistance(lat1, lng1, lat2, lng2) {
+            return new Promise((resolve) => {
+                var p1 = new BMap.Point(lng1, lat1);
+                var p2 = new BMap.Point(lng2, lat2);
+                var drive = new BMap.DrivingRoute(map, {
+                    onSearchComplete: function() {
+                        var dist = null;
+                        try {
+                            var plan = drive.getResults().getPlan(0);
+                            if (plan && plan.getDistance) {
+                                dist = plan.getDistance(0);
+                            }
+                            if (!dist || isNaN(dist)) {
+                                var routes = drive.getResults().getPlan(0).getRoute(0);
+                                if (routes && routes.getDistance) {
+                                    dist = routes.getDistance();
+                                }
+                            }
+                        } catch(e) { console.warn(e); }
+
+                        if (dist && !isNaN(dist) && dist > 0) {
+                            resolve(dist / 1000);
+                        } else {
+                            resolve(getStraightDistance(lat1, lng1, lat2, lng2));
+                        }
+                    }
+                });
+                drive.search(p1, p2);
+            });
+        }
+
+        // 绘制带距离标签的直线连线（增量添加）
+        // function drawDistanceLine(lat1, lng1, lat2, lng2, distanceKm) {
+        //     if (!distanceKm) {
+        //         distanceKm = getStraightDistance(lat1, lng1, lat2, lng2);
+        //     }
+            
+        //     var p1 = new BMap.Point(lng1, lat1);
+        //     var p2 = new BMap.Point(lng2, lat2);
+            
+        //     // 使用不同颜色区分不同连线（可选）
+        //     var colors = ['#FF6600', '#2196F3', '#4CAF50', '#9C27B0', '#FF9800'];
+        //     var colorIndex = window.lineCount || 0;
+        //     var lineColor = colors[colorIndex % colors.length];
+        //     window.lineCount = (window.lineCount || 0) + 1;
+            
+        //     var line = new BMap.Polyline([p1, p2], {
+        //         strokeColor: lineColor,
+        //         strokeWeight: 3,
+        //         strokeOpacity: 0.8
+        //     });
+        //     map.addOverlay(line);
+            
+        //     var midLng = (lng1 + lng2) / 2;
+        //     var midLat = (lat1 + lat2) / 2;
+        //     var midPoint = new BMap.Point(midLng, midLat);
+            
+        //     var distanceText = distanceKm.toFixed(1) + ' km';
+        //     var label = new BMap.Label(distanceText, {
+        //         position: midPoint,
+        //         offset: new BMap.Size(-20, -10)
+        //     });
+        //     label.setStyle({
+        //         backgroundColor: lineColor,
+        //         color: 'white',
+        //         fontSize: '12px',
+        //         padding: '2px 6px',
+        //         borderRadius: '12px',
+        //         border: 'none',
+        //         fontWeight: 'bold',
+        //         boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+        //     });
+        //     map.addOverlay(label);
+            
+        //     if (!window.distanceLabels) window.distanceLabels = [];
+        //     if (!window.distanceLines) window.distanceLines = [];
+        //     window.distanceLabels.push(label);
+        //     window.distanceLines.push(line);
+        // }
+
+        // 清除所有路线和标签（增强版）
+        function clearRoutes() {
+            // 获取地图上所有覆盖物
+            var overlays = map.getOverlays();
+            var toRemove = [];
+            
+            for (var i = 0; i < overlays.length; i++) {
+                var overlay = overlays[i];
+                // 清除驾车路线
+                if (overlay instanceof BMap.DrivingRoute) {
+                    toRemove.push(overlay);
+                }
+                // 清除橙色直线（Polyline）
+                if (overlay instanceof BMap.Polyline) {
+                    toRemove.push(overlay);
+                }
+                // 清除距离标签（Label）
+                if (overlay instanceof BMap.Label) {
+                    toRemove.push(overlay);
+                }
+            }
+            
+            // 移除所有需要清除的覆盖物
+            for (var i = 0; i < toRemove.length; i++) {
+                map.removeOverlay(toRemove[i]);
+            }
+            
+            // 清除全局存储的标签和连线
+            if (window.distanceLabels) {
+                window.distanceLabels = [];
+            }
+            if (window.distanceLines) {
+                window.distanceLines = [];
+            }
+            
+            console.log('已清除所有路线和标签，共清除：', toRemove.length, '个覆盖物');
+        }
+
+        // 只清除连线，不清除景点
+        function clearLinesOnly() {
+            var overlays = map.getOverlays();
+            var toRemove = [];
+            
+            for (var i = 0; i < overlays.length; i++) {
+                var overlay = overlays[i];
+                // 清除驾车路线
+                if (overlay instanceof BMap.DrivingRoute) {
+                    toRemove.push(overlay);
+                }
+                // 清除橙色直线（Polyline）
+                if (overlay instanceof BMap.Polyline) {
+                    toRemove.push(overlay);
+                }
+                // 清除距离标签（Label）
+                if (overlay instanceof BMap.Label) {
+                    toRemove.push(overlay);
+                }
+            }
+            
+            for (var i = 0; i < toRemove.length; i++) {
+                map.removeOverlay(toRemove[i]);
+            }
+            
+            // 清除全局存储的标签和连线
+            if (window.distanceLabels) {
+                window.distanceLabels = [];
+            }
+            if (window.distanceLines) {
+                window.distanceLines = [];
+            }
+            
+            console.log('已清除 ' + toRemove.length + ' 个连线/路线');
+            
+            // 可选：显示提示
+            var resultDiv = document.getElementById('distanceResult');
+            if (resultDiv) {
+                resultDiv.innerHTML = '<strong>📊 已清除所有连线</strong><br>可重新计算距离';
+                setTimeout(function() {
+                    if (resultDiv.innerHTML === '<strong>📊 已清除所有连线</strong><br>可重新计算距离') {
+                        resultDiv.innerHTML = '<strong>📊 计算结果：</strong><br>点击按钮查看距离';
+                    }
+                }, 1500);
+            }
+        }
+
+        // 地图选点相关变量
+        var isMapPickMode = false;  // 是否开启地图选点模式
+        var mapClickHandler = null; // 地图点击事件处理函数
+
+        // 切换地图选点模式
+        function toggleMapPickMode() {
+            isMapPickMode = !isMapPickMode;
+            var statusDiv = document.getElementById('pickStatus');
+            var toggleBtn = document.getElementById('toggleMapPickBtn');
+            
+            if (isMapPickMode) {
+                // 开启选点模式
+                statusDiv.style.display = 'block';
+                toggleBtn.style.background = '#4CAF50';
+                toggleBtn.innerHTML = '✓ 选点模式已开启';
+                
+                // 添加地图点击事件
+                mapClickHandler = function(e) {
+                    var point = e.point;
+                    var lng = point.lng;
+                    var lat = point.lat;
+                    
+                    // 逆地理编码获取地址名称
+                    getAddressByPoint(lng, lat, function(address) {
+                        var name = address || ('地点_' + (markersData.length + 1));
+                        // 弹出输入框让用户确认或修改名称
+                        var userInput = prompt('请输入景点名称：', name);
+                        if (userInput && userInput.trim()) {
+                            var finalName = userInput.trim();
+                            // 检查是否已存在
+                            var exists = markersData.some(spot => spot.name === finalName);
+                            if (exists) {
+                                alert('该景点名称已存在，请使用其他名称');
+                                return;
+                            }
+                            addSpot(finalName, lng, lat);
+                        }
+                    });
+                };
+                map.addEventListener('click', mapClickHandler);
+            } else {
+                // 关闭选点模式
+                statusDiv.style.display = 'none';
+                toggleBtn.style.background = '#2196F3';
+                toggleBtn.innerHTML = '📍 地图选点模式';
+                
+                // 移除地图点击事件
+                if (mapClickHandler) {
+                    map.removeEventListener('click', mapClickHandler);
+                    mapClickHandler = null;
+                }
+            }
+        }
+
+        // 根据经纬度获取地址名称（逆地理编码）
+        function getAddressByPoint(lng, lat, callback) {
+            var geocoder = new BMap.Geocoder();
+            var point = new BMap.Point(lng, lat);
+            geocoder.getLocation(point, function(result) {
+                if (result && result.address) {
+                    // 提取简短地址
+                    var poi = result.surroundingPois && result.surroundingPois[0] ? result.surroundingPois[0].title : '';
+                    var street = result.addressComponents.street || '';
+                    var district = result.addressComponents.district || '';
+                    
+                    // 优先使用POI名称，其次使用街道，最后使用区
+                    if (poi) {
+                        callback(poi);
+                    } else if (street) {
+                        callback(street);
+                    } else if (district) {
+                        callback(district);
+                    } else {
+                        callback('地点_' + lng.toFixed(4) + '_' + lat.toFixed(4));
+                    }
+                } else {
+                    callback(null);
+                }
+            });
+        }
+
+        // 保存景点到本地存储
+        function saveSpotsToLocal() {
+            localStorage.setItem('travelSpots', JSON.stringify(markersData));
+            console.log('景点已保存，共', markersData.length, '个');
+        }
+
+        // 从本地存储加载景点
+        function loadSpotsFromLocal() {
+            var saved = localStorage.getItem('travelSpots');
+            if (saved) {
+                try {
+                    var spots = JSON.parse(saved);
+                    if (spots && spots.length > 0) {
+                        markersData = spots;
+                        console.log('已加载保存的景点，共', markersData.length, '个');
+                        return true;
+                    }
+                } catch(e) {
+                    console.error('加载景点失败:', e);
+                }
+            }
+            return false;
+        }
+
+        // 绘制单条驾车路线 + 距离连线（增量添加，不清除旧路线）
+        function drawSingleRoute(lat1, lng1, lat2, lng2, distKm) {
+            // 注意：移除了 clearRoutes() 调用
+            
+            var p1 = new BMap.Point(lng1, lat1);
+            var p2 = new BMap.Point(lng2, lat2);
+            
+            // 驾车路线
+            var driving = new BMap.DrivingRoute(map, {
+                onSearchComplete: function() {
+                    if (driving.getStatus() == BMAP_STATUS_SUCCESS) {
+                        map.addOverlay(driving);
+                    }
+                }
+            });
+            driving.search(p1, p2);
+            
+            // 直线连线 + 距离标签
+            drawDistanceLine(lat1, lng1, lat2, lng2, distKm);
+        }
+
+        // 计算两点距离（支持多种出行方式）
+        async function calcTwoPoints() {
+            // 清除之前的所有自定义路线
+            clearAllCustomLines();
+            
+            if (markersData.length < 2) {
+                document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">请至少添加2个景点</span>';
+                return;
+            }
+            
+            var startIdx = document.getElementById('startPoint').value;
+            var endIdx = document.getElementById('endPoint').value;
+            if (startIdx === '' || endIdx === '') {
+                document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">请选择起点和终点</span>';
+                return;
+            }
+            if (startIdx === endIdx) {
+                document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">起点和终点不能相同</span>';
+                return;
+            }
+
+            var s = markersData[startIdx];
+            var e = markersData[endIdx];
+            var travelMode = document.getElementById('travelMode').value;
+            
+            document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="loading">正在规划路线...</span>';
+
+            // 根据出行方式调用不同的API
+            if (travelMode === 'driving') {
+                await calcDrivingRoute(s, e);
+            } else if (travelMode === 'transit') {
+                await calcTransitRoute(s, e);
+            } else if (travelMode === 'walking') {
+                await calcWalkingRoute(s, e);
+            } else if (travelMode === 'biking') {
+                await calcBikingRoute(s, e);
+            }
+        }
+
+        // 存储路线数据
+        window.routeData = { walk: [], bus: [] };
+
+        // <!---------------------------------------- 出行方式：驾车 ---------------------------------------->
+        // 驾车路线（使用 Web API 获取详细描述）
+        async function calcDrivingRoute(s, e) {
+            var startPoint = new BMap.Point(s.lng, s.lat);
+            var endPoint = new BMap.Point(e.lng, e.lat);
+            
+            // 先用 JS API 在地图上显示路线
+            var driving = new BMap.DrivingRoute(map, {
+                onSearchComplete: function(results) {
+                    if (driving.getStatus() === BMAP_STATUS_SUCCESS) {
+                        map.addOverlay(driving);
+                    }
+                }
+            });
+            driving.search(startPoint, endPoint);
+            
+            // 使用 JSONP 调用 Web API 获取详细数据
+            var callbackName = 'baiduDrivingCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                console.log('驾车API返回:', data);
+                
+                if (data.status === 0 && data.result && data.result.routes && data.result.routes.length > 0) {
+                    var route = data.result.routes[0];
+                    var steps = route.steps;
+                    var fullDescription = '';
+                    var steps = [];
+                    window.driveRouteData = [];
+
+                    // 方向数字转文字
+                    function getDirectionText(dir) {
+                        var dirMap = {
+                            0: '', 1: '北', 2: '东北', 3: '东', 4: '东南',
+                            5: '南', 6: '西南', 7: '西', 8: '西北', 9: '掉头',
+                            10: '左前方', 11: '右前方', 12: '左后方', 13: '右后方'
+                        };
+                        return dirMap[dir] || '';
+                    }
+
+                    var stepsData = data.result.routes[0].steps;
+
+                    for (var i = 0; i < stepsData.length; i++) {
+                        var step = stepsData[i];
+                        var roadName = step.road_name;
+                        var distance = step.distance;
+                        var direction = step.direction;
+                        var pathStr = step.path;
+                        
+                        // 构建描述文字
+                        var desc = '';
+                        var distKm = (distance / 1000).toFixed(1);
+                        
+                        if (i === 0) {
+                            desc = '从起点向' + getDirectionText(direction) + '方向行驶，进入' + roadName + '，行驶' + distKm + '公里';
+                        } else if (i === stepsData.length - 1) {
+                            var dirText = getDirectionText(direction);
+                            if (dirText === '掉头') {
+                                desc = '掉头行驶' + distKm + '公里，到达终点';
+                            } else if (dirText) {
+                                desc = '向' + dirText + '方向行驶' + distKm + '公里，到达终点';
+                            } else {
+                                desc = '行驶' + distKm + '公里，到达终点';
+                            }
+                        } else {
+                            var dirText = getDirectionText(direction);
+                            if (dirText === '掉头') {
+                                desc = '掉头，进入' + roadName + '，行驶' + distKm + '公里';
+                            } else if (dirText) {
+                                desc = dirText + '转，进入' + roadName + '，行驶' + distKm + '公里';
+                            } else {
+                                desc = '进入' + roadName + '，行驶' + distKm + '公里';
+                            }
+                        }          
+
+                        steps.push(desc);
+                        console.log('步骤', i, '描述:', desc);
+                        
+                        // 获取路径点
+                        if (pathStr && pathStr !== '') {
+                            var pathPoints = [];
+                            var coords = pathStr.split(';');
+                            for (var j = 0; j < coords.length; j++) {
+                                var coord = coords[j].split(',');
+                                if (coord.length === 2) {
+                                    pathPoints.push(new BMap.Point(parseFloat(coord[0]), parseFloat(coord[1])));
+                                }
+                            }
+                            if (pathPoints.length > 0) {
+                                window.driveRouteData.push(pathPoints);
+                            }
+                        }
+                    }      
+
+                    // 获取距离和时间
+                    var distance = route.distance / 1000;
+                    var duration = route.duration;
+                    var totalMinutes = Math.floor(duration / 60);
+                    var hours = Math.floor(totalMinutes / 60);
+                    var remainMinutes = totalMinutes % 60;
+                    var timeStr = '';
+                    if (hours > 0) timeStr += hours + '小时';
+                    if (remainMinutes > 0) timeStr += remainMinutes + '分钟';
+                    if (timeStr === '') timeStr = totalMinutes + '分钟';
+                    
+                    // 构建HTML
+                    var html = '<details open style="background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">';
+                    html += '<summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: #2196F3;">🚗 驾车规划</summary>';
+                    html += '<div style="margin-top: 8px; font-size: 12px; line-height: 1.7;">';
+                    html += '<strong>起点：</strong> ' + s.name + '<br>';
+                    html += '<strong>终点：</strong> ' + e.name + '<br>';
+                    html += '<strong>距离：</strong> ' + distance.toFixed(2) + ' 公里<br>';
+                    html += '<strong>预计时间：</strong> ' + timeStr + '<br>';
+                    html += '</div></details>';
+                    
+                    if (steps.length > 0) {
+                        html += '<details style="margin-top: 8px;" open><summary style="cursor: pointer; color: #2196F3; font-weight: bold; font-size: 13px;">🚗 详细路线</summary>';
+                        html += '<div style="margin-top: 8px; font-size: 12px; background: #f5f5f5; border-radius: 6px; padding: 10px;">';
+                        steps.forEach(function(step, idx) {
+                            html += '<div style="margin: 4px 0;">' + (idx + 1) + '. ' + step + '</div>';
+                        });
+                        // html += '<div style="margin-top: 10px; text-align: center;">';
+                        // html += '<button onclick="drawDrivingFullRoute()" style="padding: 4px 12px; background: #4CAF50; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 11px;">📍 显示完整路线</button>';
+                        // html += '</div>';
+                        // html += '</div></details>';
+                    }     
+
+                    document.getElementById('distanceResult').innerHTML = html;
+                    drawDrivingFullRoute();
+
+                } else {
+                    document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">驾车路线规划失败</span>';
+                }
+                
+                delete window[callbackName];
+                document.head.removeChild(script);
+            };
+            
+            var script = document.createElement('script');
+            script.src = `https://api.map.baidu.com/direction/v2/driving?origin=${s.lat},${s.lng}&destination=${e.lat},${e.lng}&ak=${BAIDU_SERVER_AK}&output=json&callback=${callbackName}`;
+            script.onerror = function() {
+                document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">驾车路线请求失败</span>';
+                delete window[callbackName];
+            };
+            document.head.appendChild(script);
+        }
+
+        // 绘制完整驾车路线（橙色）
+        function drawDrivingFullRoute() {
+            // 清除之前绘制的自定义路线
+            if (window.customDriveLines) {
+                for (var i = 0; i < window.customDriveLines.length; i++) {
+                    map.removeOverlay(window.customDriveLines[i]);
+                }
+            }
+            window.customDriveLines = [];
+            
+            // 绘制驾车路线（橙色加粗）
+            if (window.driveRouteData && window.driveRouteData.length > 0) {
+                for (var i = 0; i < window.driveRouteData.length; i++) {
+                    var points = window.driveRouteData[i];
+                    if (points && points.length > 0) {
+                        var driveLine = new BMap.Polyline(points, {
+                            strokeColor: "#FF6600",  // 橙色
+                            strokeWeight: 6,
+                            strokeOpacity: 0.9,
+                            strokeStyle: "solid"
+                        });
+                        map.addOverlay(driveLine);
+                        window.customDriveLines.push(driveLine);
+                    }
+                }
+            }
+    
+            // 调整地图视野
+            var allPoints = [];
+            if (window.driveRouteData) {
+                for (var i = 0; i < window.driveRouteData.length; i++) {
+                    for (var j = 0; j < window.driveRouteData[i].length; j++) {
+                        allPoints.push(window.driveRouteData[i][j]);
+                    }
+                }
+            }
+            
+            if (allPoints.length > 0) {
+                var bounds = new BMap.Bounds();
+                for (var i = 0; i < allPoints.length; i++) {
+                    bounds.extend(allPoints[i]);
+                }
+                map.setViewport(bounds);
+            }
+            
+            // 显示小提示
+            var tooltip = document.createElement('div');
+            tooltip.innerHTML = '✅ 驾车路线已绘制（橙色）';
+            tooltip.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#FF6600; color:white; padding:4px 8px; border-radius:4px; font-size:10px; z-index:10000;';
+            document.body.appendChild(tooltip);
+            setTimeout(function() { tooltip.remove(); }, 2000);
+        }
+
+        // <!---------------------------------------- 出行方式：公交 ---------------------------------------->
+        // 公交/地铁路线
+        function calcTransitRoute(s, e) {
+            var startPoint = new BMap.Point(s.lng, s.lat);
+            var endPoint = new BMap.Point(e.lng, e.lat);
+            
+            // 先用浏览器端 JS API 显示基本蓝色路线
+            var transit = new BMap.TransitRoute(map, {
+                onSearchComplete: function(results) {
+                    if (transit.getStatus() === BMAP_STATUS_SUCCESS) {
+                        map.addOverlay(transit);
+                    }
+                }
+            });
+            transit.search(startPoint, endPoint);
+            
+            // 使用 JSONP 调用 Web API 获取详细路径数据
+            var callbackName = 'baiduRouteCallback_' + Date.now();
+            
+            window[callbackName] = function(data) {
+                var startName = (s && s.name) ? s.name.replace(/\n/g, '').replace(/\r/g, '') : '';
+                var endName = (e && e.name) ? e.name.replace(/\n/g, '').replace(/\r/g, '') : '';
+
+                if (data.status === 0 && data.result && data.result.routes && data.result.routes.length > 0) {
+                    var route = data.result.routes[0];
+                    var steps = route.steps;
+                    
+                    // 清空之前的数据
+                    window.routeData = { walk: [], bus: [] };
+                    
+                    // 解析 steps 并构建乘车方案
+                    // 构建乘车方案HTML（详细分行格式）                    
+                    var stepsData = data.result.routes[0].steps;
+                    var routeSteps = [];
+                    for (var i = 0; i < stepsData.length; i++) {
+                        var stepList = stepsData[i];
+                        
+                        for (var j = 0; j < stepList.length; j++) {
+                            var step = stepList[j];
+                            var stepType = step.trans_type;  // 0=步行, -1=公交/地铁
+                            var instruction = step.instructions || '';
+                            
+                            // 解析路径点
+                            if (step.path && step.path !== '') {
+                                var pathStr = step.path;
+                                var pathPoints = [];
+                                var coords = pathStr.split(';');
+                                
+                                for (var k = 0; k < coords.length; k++) {
+                                    var coord = coords[k].split(',');
+                                    if (coord.length === 2) {
+                                        pathPoints.push(new BMap.Point(parseFloat(coord[0]), parseFloat(coord[1])));
+                                    }
+                                }
+                                
+                                if (pathPoints.length > 0) {
+                                    if (stepType === 0) {
+                                        window.routeData.walk.push(pathPoints);
+                                    } else {
+                                        window.routeData.bus.push(pathPoints);
+                                    }
+                                }
+                            }
+                            
+                            // 构建显示文本
+                            if (stepType === 0) {
+                                var walkMatch = instruction.match(/步行(\d+)米/);
+                                var walkDistance = walkMatch ? walkMatch[1] : '';
+                                var walkText = walkMatch ? ('🚶 步行 ' + walkDistance + '米') : ('🚶 ' + instruction);
+                                
+                                // 获取步行的起点和终点坐标
+                                var walkStart = step.start_location;
+                                var walkEnd = step.end_location;
+                                
+                                // 存储步行起终点
+                                var walkKey = 'walk_' + i + '_' + j;
+                                window.walkPointsData = window.walkPointsData || {};
+                                window.walkPointsData[walkKey] = {
+                                    start: walkStart,
+                                    end: walkEnd,
+                                    text: walkText
+                                };
+                                
+                                // 创建可点击的步行描述
+                                routeSteps.push('<span style="cursor: pointer; color: #30A209; text-decoration: underline;" onclick="showWalkGuidance(this, \'' + walkKey + '\')">' + walkText + '</span>');
+                            } else {
+                                // 公交段：解析上下车站点和线路
+                                var onStationMatch = instruction.match(/^(.+?)站乘/);
+                                var lineMatch = instruction.match(/乘(.+?)[\(（]/);
+                                var stationCountMatch = instruction.match(/经过(\d+)站/);
+                                var offStationMatch = instruction.match(/到(.+?)站$/);
+                                
+                                if (onStationMatch) {
+                                    var onStation = onStationMatch[1] + '站';
+                                    routeSteps.push('🚌 ↑ <span style="color: #4271B0;">' + onStation + '</span> 上车');
+                                }
+
+                                if (lineMatch) {
+                                    var lineName = lineMatch[1];
+                                    var stationCount = stationCountMatch ? stationCountMatch[1] : '';
+                                    
+                                    // 获取站点列表
+                                    var busStationsList = [];
+                                    if (step.vehicle_info && step.vehicle_info.detail && step.vehicle_info.detail.stop_info) {
+                                        var stopInfo = step.vehicle_info.detail.stop_info;
+                                        for (var s = 0; s < stopInfo.length; s++) {
+                                            busStationsList.push(stopInfo[s].stop_name);
+                                        }
+                                    }
+                                    
+                                    // 存储站点列表供展开使用
+                                    window.busStationsData = window.busStationsData || {};
+                                    window.busStationsData[lineName] = busStationsList;
+                                    
+                                    // 创建可点击的站数显示
+                                    var stationHtml = stationCount + '站';
+                                    if (busStationsList.length > 0) {
+                                        stationHtml = '<span style="cursor: pointer; color: #2196F3; text-decoration: underline;" onclick="toggleStations(this, \'' + lineName.replace(/'/g, "\\'") + '\')">' + stationCount + '站</span>';
+                                    }
+                                    
+                                    routeSteps.push('<div style="margin-left: 12px;">' + lineName + '  ' + stationHtml + '</div>');
+                                }
+
+                                if (offStationMatch) {
+                                    var offStation = offStationMatch[1] + '站';
+                                    routeSteps.push('🚌 ↓ <span style="color: #4271B0;">' + offStation + '</span> 下车');
+                                }
+
+
+                            }
+                        }
+                    }
+
+                    // 获取距离和时间
+                    var distance = route.distance / 1000;
+                    var duration = route.duration;
+                    var minutes = Math.floor(duration / 60);
+                    var hours = Math.floor(minutes / 60);
+                    var remainMinutes = minutes % 60;
+                    var timeStr = '';
+                    if (hours > 0) timeStr += hours + '小时';
+                    if (remainMinutes > 0) timeStr += remainMinutes + '分钟';
+                    if (timeStr === '') timeStr = minutes + '分钟';
+                    
+
+                    var html = '<details open style="background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">';
+                    html += '<summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: #2196F3;">🚌 公交/地铁路线</summary>';
+                    html += '<div style="margin-top: 8px; font-size: 12px; line-height: 1.7;">';
+                    html += '<div>📍 起点：' + startName + '</div>';
+                    html += '<div>🏁 终点：' + endName + '</div>';
+                    html += '<div>📏 距离：' + distance.toFixed(2) + ' 公里</div>';
+                    html += '<div>⏱️ 预计时间：' + timeStr + '</div>';
+                    html += '</div></details>';
+
+                    // 乘车方案（默认展开）
+                    html += '<details open style="margin-top: 8px;">';
+                    html += '<summary style="cursor: pointer; color: #2196F3; font-size: 13px; font-weight: 600;">🚌 乘车方案</summary>';
+                    html += '<div style="margin-top: 8px; font-size: 12px; padding-left: 8px;">';
+
+                    for (var i = 0; i < routeSteps.length; i++) {
+                        var step = routeSteps[i];
+                        // 只对线路和站数那一行添加缩进（包含线路名称和站数的行）
+                        if (step.indexOf('</span></div>') !== -1 && step.indexOf('站</span>') !== -1) {
+                            html += '<div style="margin-left: 24px; color: #666;">' + step + '</div>';
+                        } else {
+                            html += '<div style="margin: 6px 0;">' + step + '</div>';
+                        }
+
+                    }
+
+                    // html += '<div style="margin-top: 10px; text-align: center;">';
+                    // html += '<button onclick="drawFullRoute()" style="padding: 4px 12px; background: #4CAF50; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 11px;">📍 显示完整路线</button>';
+                    // html += '</div>';
+                    // html += '</div></details>';
+                    
+                    document.getElementById('distanceResult').innerHTML = html;
+                    // drawDistanceLine(s.lat, s.lng, e.lat, e.lng, distance);
+
+                    // 自动绘制公交路线
+                    drawFullRoute();
+                    
+                } else {
+                    var errorMsg = data.message || '未知错误';
+                    document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">公交路线规划失败: ' + errorMsg + '</span>';
+                }
+                
+                delete window[callbackName];
+                document.head.removeChild(script);
+            };
+            
+            // 使用服务端 AK 调用 Web API
+            var script = document.createElement('script');
+            script.src = `https://api.map.baidu.com/direction/v2/transit?origin=${s.lat},${s.lng}&destination=${e.lat},${e.lng}&ak=${BAIDU_SERVER_AK}&output=json&callback=${callbackName}`;
+            script.onerror = function() {
+                document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">公交路线请求失败，请检查服务端AK配置</span>';
+                delete window[callbackName];
+            };
+            document.head.appendChild(script);
+        }
+
+        // 展开/收起公交站点列表
+        function toggleStations(element, lineName) {
+            var parentDiv = element.parentElement;
+            var existingList = parentDiv.nextElementSibling;
+            
+            if (existingList && existingList.className === 'stations-list') {
+                existingList.remove();
+            } else {
+                var stations = window.busStationsData[lineName];
+                if (stations && stations.length > 0) {
+                    var stationsDiv = document.createElement('div');
+                    stationsDiv.className = 'stations-list';
+                    stationsDiv.style.cssText = 'margin-left: 24px; margin-top: 4px; margin-bottom: 4px; padding-left: 12px; border-left: 2px solid #2196F3; font-size: 11px; color: #666;';
+                    var html = '';
+                    for (var i = 0; i < stations.length; i++) {
+                        html += '<div style="margin: 2px 0;">' + (i + 1) + '. ' + stations[i] + '</div>';
+                    }
+                    stationsDiv.innerHTML = html;
+                    parentDiv.insertAdjacentElement('afterend', stationsDiv);
+                }
+            }
+        }
+
+        // 展开/收起步行详细指引
+        function showWalkGuidance(element, walkKey) {
+            var parentDiv = element.parentElement;
+            var existingList = parentDiv.nextElementSibling;
+            
+            if (existingList && existingList.className === 'walk-guidance-list') {
+                existingList.remove();
+                return;
+            }
+            
+            var walkData = window.walkPointsData[walkKey];
+            if (!walkData) return;
+            
+            // 显示加载中
+            var loadingDiv = document.createElement('div');
+            loadingDiv.className = 'walk-guidance-list';
+            loadingDiv.style.cssText = 'margin-left: 20px; margin-top: 4px; color: #999; font-size: 11px;';
+            loadingDiv.innerHTML = '⏳ 获取步行指引中...';
+            parentDiv.insertAdjacentElement('afterend', loadingDiv);
+            
+            // 调用步行规划 API
+            var callbackName = 'walkGuidanceCallback_' + Date.now();
+            window[callbackName] = function(data) {
+                console.log('步行API返回:', data);
+                
+                var detailsDiv = document.createElement('div');
+                detailsDiv.className = 'walk-guidance-list';
+                detailsDiv.style.cssText = 'margin-left: 20px; margin-top: 6px; margin-bottom: 6px; padding-left: 12px; border-left: 2px solid #30A209; font-size: 12px; color: #555;';
+                
+                if (data.status === 0 && data.result && data.result.routes && data.result.routes.length > 0) {
+                    var steps = data.result.routes[0].steps;
+                    var html = '';
+                    for (var i = 0; i < steps.length; i++) {
+                        var step = steps[i];
+                        // 使用 instructions（复数）而不是 instruction
+                        var instruction = step.instructions || '';
+                        // 去除 HTML 标签（如 <b>）
+                        instruction = instruction.replace(/<[^>]+>/g, '');
+                        var arrow = '';
+                        html += '<div style="margin: 4px 0;">' + arrow + (i + 1) + '. ' + instruction + '</div>';
+                    }
+                    detailsDiv.innerHTML = html;
+                } else {
+                    detailsDiv.innerHTML = '<div style="margin: 4px 0; color: #999;">暂无详细步行指引</div>';
+                }
+                
+                // 替换加载提示
+                loadingDiv.replaceWith(detailsDiv);
+                delete window[callbackName];
+            };
+            
+            var script = document.createElement('script');
+            script.src = `https://api.map.baidu.com/direction/v2/walking?origin=${walkData.start.lat},${walkData.start.lng}&destination=${walkData.end.lat},${walkData.end.lng}&ak=${BAIDU_SERVER_AK}&output=json&callback=${callbackName}`;
+            script.onerror = function() {
+                loadingDiv.innerHTML = '<span style="color: #f44336;">获取步行指引失败</span>';
+                setTimeout(function() { loadingDiv.remove(); }, 2000);
+                delete window[callbackName];
+            };
+            document.head.appendChild(script);
+        }
+
+        // 在地图上绘制完整路线（步行绿色 + 公交蓝色）
+        function drawFullRoute() {
+            // 清除之前绘制的自定义路线
+            if (window.customLines) {
+                for (var i = 0; i < window.customLines.length; i++) {
+                    map.removeOverlay(window.customLines[i]);
+                }
+            }
+            window.customLines = [];
+            
+            // 绘制步行路线（绿色加粗）
+            if (window.routeData && window.routeData.walk) {
+                for (var i = 0; i < window.routeData.walk.length; i++) {
+                    var points = window.routeData.walk[i];
+                    if (points && points.length > 0) {
+                        var walkLine = new BMap.Polyline(points, {
+                            strokeColor: "#30A209",
+                            strokeWeight: 6,
+                            strokeOpacity: 0.9,
+                            strokeStyle: "solid"
+                        });
+                        map.addOverlay(walkLine);
+                        window.customLines.push(walkLine);
+                    }
+                }
+            }
+            
+            // 绘制公交路线（蓝色加粗）
+            if (window.routeData && window.routeData.bus) {
+                for (var i = 0; i < window.routeData.bus.length; i++) {
+                    var points = window.routeData.bus[i];
+                    if (points && points.length > 0) {
+                        var busLine = new BMap.Polyline(points, {
+                            strokeColor: "#2196F3",
+                            strokeWeight: 6,
+                            strokeOpacity: 0.9,
+                            strokeStyle: "solid"
+                        });
+                        map.addOverlay(busLine);
+                        window.customLines.push(busLine);
+                    }
+                }
+            }
+            
+            // 调整地图视野到完整路线
+            var allPoints = [];
+            if (window.routeData && window.routeData.walk) {
+                for (var i = 0; i < window.routeData.walk.length; i++) {
+                    for (var j = 0; j < window.routeData.walk[i].length; j++) {
+                        allPoints.push(window.routeData.walk[i][j]);
+                    }
+                }
+            }
+            if (window.routeData && window.routeData.bus) {
+                for (var i = 0; i < window.routeData.bus.length; i++) {
+                    for (var j = 0; j < window.routeData.bus[i].length; j++) {
+                        allPoints.push(window.routeData.bus[i][j]);
+                    }
+                }
+            }
+            
+            if (allPoints.length > 0) {
+                var bounds = new BMap.Bounds();
+                for (var i = 0; i < allPoints.length; i++) {
+                    bounds.extend(allPoints[i]);
+                }
+                map.setViewport(bounds);
+            }
+            
+            // 显示提示
+            var tooltip = document.createElement('div');
+            tooltip.innerHTML = '✅ 完整路线已绘制：绿色=步行，蓝色=公交';
+            tooltip.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#30A209; color:white; padding:8px 12px; border-radius:8px; font-size:10px; z-index:10000;';
+            document.body.appendChild(tooltip);
+            setTimeout(function() { tooltip.remove(); }, 3000);
+        }
+
+        // <!---------------------------------------- 出行方式：步行 ---------------------------------------->
+        // 步行路线
+        async function calcWalkingRoute(s, e) {
+            var startPoint = new BMap.Point(s.lng, s.lat);
+            var endPoint = new BMap.Point(e.lng, e.lat);
+            
+            var walking = new BMap.WalkingRoute(map, {
+                onSearchComplete: function(results) {
+                    if (walking.getStatus() === BMAP_STATUS_SUCCESS) {
+                        var plan = results.getPlan(0);
+                        
+                        // 修复：获取距离和时间的正确方式
+                        var distance = 0;
+                        var duration = 0;
+                        
+                        // 方法1：直接从 plan 获取
+                        if (plan.getDistance) {
+                            var dist = plan.getDistance(false);
+                            if (dist && !isNaN(dist)) distance = dist;
+                        }
+                        
+                        if (plan.getDuration) {
+                            var dur = plan.getDuration(false);
+                            if (dur && !isNaN(dur)) duration = dur;
+                        }
+                        
+                        // 方法2：如果还是 NaN，从路线中累加
+                        if (distance === 0 || isNaN(distance)) {
+                            var numRoutes = plan.getNumRoutes();
+                            for (var i = 0; i < numRoutes; i++) {
+                                var route = plan.getRoute(i);
+                                if (route.getDistance) {
+                                    var routeDist = route.getDistance(false);
+                                    if (routeDist && !isNaN(routeDist)) distance += routeDist;
+                                }
+                            }
+                        }
+                        
+                        if (duration === 0 || isNaN(duration)) {
+                            var numRoutes = plan.getNumRoutes();
+                            for (var i = 0; i < numRoutes; i++) {
+                                var route = plan.getRoute(i);
+                                if (route.getDuration) {
+                                    var routeDur = route.getDuration(false);
+                                    if (routeDur && !isNaN(routeDur)) duration += routeDur;
+                                }
+                            }
+                        }
+                        
+                        // 转换为公里和分钟
+                        distance = distance / 1000;
+                        var totalMinutes = Math.floor(duration / 60);  // 秒转分钟
+                        var hours = Math.floor(totalMinutes / 60);
+                        var remainMinutes = totalMinutes % 60;
+                        var timeStr = '';
+                        if (hours > 0) timeStr += hours + '小时';
+                        if (remainMinutes > 0) timeStr += remainMinutes + '分钟';
+                        if (timeStr === '') timeStr = totalMinutes + '分钟';
+
+                        var timeStr = '';
+                        if (hours > 0) timeStr += hours + '小时';
+                        if (remainMinutes > 0) timeStr += remainMinutes + '分钟';
+                        if (timeStr === '') timeStr = minutes + '分钟';
+                        
+                        // 获取详细步骤
+                        var steps = [];
+                        window.walkRouteData = [];  // 新增：存储路径点
+                        var numRoutes = plan.getNumRoutes();
+                        for (var i = 0; i < numRoutes; i++) {
+                            var route = plan.getRoute(i);
+                            var numSteps = route.getNumSteps();
+                            for (var j = 0; j < numSteps; j++) {
+                                var step = route.getStep(j);
+                                var desc = step.getDescription();
+                                if (desc) steps.push(desc);
+                                
+                                // 尝试多种方式获取路径点
+                                var pathPoints = null;
+
+                                // 方法1：getPath
+                                if (step.getPath) {
+                                    pathPoints = step.getPath();
+                                }
+
+                                // 方法2：getPolyline
+                                if ((!pathPoints || pathPoints.length === 0) && step.getPolyline) {
+                                    var polyline = step.getPolyline();
+                                    if (polyline && polyline.getPath) {
+                                        pathPoints = polyline.getPath();
+                                    }
+                                }
+
+                                // 方法3：从路线获取
+                                if ((!pathPoints || pathPoints.length === 0) && route.getPath) {
+                                    pathPoints = route.getPath();
+                                }
+
+                                if (pathPoints && pathPoints.length > 0) {
+                                    window.walkRouteData.push(pathPoints);
+                                    console.log('获取到步行路径点，数量:', pathPoints.length);
+                                }
+
+
+                            }
+                        }
+
+                        
+                        var html = '<details open style="background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">';
+                        html += '<summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: #2196F3;">🚶 步行规划</summary>';
+                        html += '<div style="margin-top: 8px; font-size: 12px; line-height: 1.7;">';
+                        html += '<strong>起点：</strong> ' + s.name + '<br>';
+                        html += '<strong>终点：</strong> ' + e.name + '<br>';
+                        html += '<strong>距离：</strong> ' + distance.toFixed(2) + ' 公里<br>';
+                        html += '<strong>预计时间：</strong> ' + timeStr + '<br>';
+                        html += '</div></details>';
+
+                        if (steps.length > 0) {
+                            html += '<details style="margin-top: 8px;" open><summary style="cursor: pointer; color: #2196F3; font-weight: bold; font-size: 13px;">🚶 详细路线</summary>';
+                            html += '<div style="margin-top: 8px; font-size: 12px; background: #f5f5f5; border-radius: 6px; padding: 10px;">';
+                            steps.forEach(function(step, idx) {
+                                html += '<div style="margin: 4px 0;">' + (idx + 1) + '. ' + step + '</div>';
+                            });
+                            
+                            // 新增：添加按钮
+                            // html += '<div style="margin-top: 10px; text-align: center;">';
+                            // html += '<button onclick="drawWalkingFullRoute()" style="padding: 4px 12px; background: #4CAF50; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 11px;">📍 显示完整路线</button>';
+                            // html += '</div>';
+                            
+                            // html += '</div></details>';
+                        }
+                        
+                        document.getElementById('distanceResult').innerHTML = html;
+                        map.addOverlay(walking);
+                        // drawDistanceLine(s.lat, s.lng, e.lat, e.lng, distance);
+                        drawWalkingFullRoute()
+                    } else {
+                        document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">步行路线规划失败</span>';
+                    }
+                }
+            });
+            walking.search(startPoint, endPoint);
+        }
+
+        // 绘制完整步行路线
+        function drawWalkingFullRoute() {
+            // 清除之前绘制的自定义路线
+            if (window.customWalkLines) {
+                for (var i = 0; i < window.customWalkLines.length; i++) {
+                    map.removeOverlay(window.customWalkLines[i]);
+                }
+            }
+            window.customWalkLines = [];
+            
+            // 绘制步行路线（绿色加粗）
+            if (window.walkRouteData && window.walkRouteData.length > 0) {
+                for (var i = 0; i < window.walkRouteData.length; i++) {
+                    var points = window.walkRouteData[i];
+                    if (points && points.length > 0) {
+                        var walkLine = new BMap.Polyline(points, {
+                            strokeColor: "#30A209",
+                            strokeWeight: 6,
+                            strokeOpacity: 0.9,
+                            strokeStyle: "solid"
+                        });
+                        map.addOverlay(walkLine);
+                        window.customWalkLines.push(walkLine);
+                    }
+                }
+            }
+            
+            // 调整地图视野
+            var allPoints = [];
+            if (window.walkRouteData) {
+                for (var i = 0; i < window.walkRouteData.length; i++) {
+                    for (var j = 0; j < window.walkRouteData[i].length; j++) {
+                        allPoints.push(window.walkRouteData[i][j]);
+                    }
+                }
+            }
+            
+            if (allPoints.length > 0) {
+                var bounds = new BMap.Bounds();
+                for (var i = 0; i < allPoints.length; i++) {
+                    bounds.extend(allPoints[i]);
+                }
+                map.setViewport(bounds);
+            }
+            
+            // 显示提示
+            var tooltip = document.createElement('div');
+            tooltip.innerHTML = '✅ 步行路线已绘制（绿色）';
+            tooltip.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#30A209; color:white; padding:8px 12px; border-radius:8px; font-size:10px; z-index:10000;';
+            document.body.appendChild(tooltip);
+            setTimeout(function() { tooltip.remove(); }, 3000);
+        }
+
+        // 清除所有自定义路线
+        function clearAllCustomLines() {
+            // 清除公交/驾车路线
+            if (window.customLines) {
+                for (var i = 0; i < window.customLines.length; i++) {
+                    map.removeOverlay(window.customLines[i]);
+                }
+                window.customLines = [];
+            }
+            // 清除步行路线
+            if (window.customWalkLines) {
+                for (var i = 0; i < window.customWalkLines.length; i++) {
+                    map.removeOverlay(window.customWalkLines[i]);
+                }
+                window.customWalkLines = [];
+            }
+            // 清除驾车路线
+            if (window.customDriveLines) {
+                for (var i = 0; i < window.customDriveLines.length; i++) {
+                    map.removeOverlay(window.customDriveLines[i]);
+                }
+                window.customDriveLines = [];
+            }
+            // 清除骑行路线
+            if (window.customBikeLines) {
+                for (var i = 0; i < window.customBikeLines.length; i++) {
+                    map.removeOverlay(window.customBikeLines[i]);
+                }
+                window.customBikeLines = [];
+            }
+        }
+
+        // <!---------------------------------------- 优化行程模块 ---------------------------------------->
+        // 计算所有距离矩阵
+        async function calcAllDistances() {
+            clearAllCustomLines();
+            
+            // 获取选中的景点
+            var checkboxes = document.querySelectorAll('.optimize-checkbox');
+            var selectedIndices = [];
+            checkboxes.forEach(function(cb) {
+                if (cb.checked) {
+                    selectedIndices.push(parseInt(cb.value));
+                }
+            });
+            
+            if (selectedIndices.length < 2) {
+                alert('请至少选择2个景点计算距离');
+                return;
+            }
+            
+            // 获取用户选择的起点
+            var startIdx = document.getElementById('optimizeStartPoint').value;
+            if (startIdx === '') {
+                alert('请选择起点');
+                return;
+            }
+            startIdx = parseInt(startIdx);
+            
+            // 检查起点是否在选中的景点中
+            if (!selectedIndices.includes(startIdx)) {
+                alert('起点必须在选中的景点中');
+                return;
+            }
+            
+            var n = selectedIndices.length;
+            var matrix = Array(n).fill().map(() => Array(n).fill(0));
+            var total = n * (n - 1) / 2;
+            var done = 0;
+            
+            // 找到起点在 selectedIndices 中的位置
+            var startPosInSelected = selectedIndices.indexOf(startIdx);
+            
+            // 交换，让起点在数组第一个位置
+            if (startPosInSelected !== 0) {
+                var temp = selectedIndices[0];
+                selectedIndices[0] = selectedIndices[startPosInSelected];
+                selectedIndices[startPosInSelected] = temp;
+            }
+            
+            document.getElementById('distanceResult').innerHTML = '<strong>📊 正在计算距离...</strong><br><div class="loading">⏳ 请稍候...</div>';
+            
+            for (var i = 0; i < n; i++) {
+                for (var j = i + 1; j < n; j++) {
+                    (function(ii, jj) {
+                        var idx1 = selectedIndices[ii];
+                        var idx2 = selectedIndices[jj];
+                        var p1 = markersData[idx1];
+                        var p2 = markersData[idx2];
+                        
+                        if (distanceMatrix[idx1] && distanceMatrix[idx1][idx2]) {
+                            var dist = distanceMatrix[idx1][idx2];
+                            matrix[ii][jj] = dist;
+                            matrix[jj][ii] = dist;
+                            done++;
+                            if (done === total) {
+                                showDistanceCard(matrix, selectedIndices, startIdx);
+                            }
+                        } else {
+                            getDrivingDistance(p1.lat, p1.lng, p2.lat, p2.lng).then(function(dist) {
+                                matrix[ii][jj] = dist;
+                                matrix[jj][ii] = dist;
+                                done++;
+                                if (done === total) {
+                                    showDistanceCard(matrix, selectedIndices, startIdx);
+                                }
+                            });
+                        }
+                    })(i, j);
+                }
+            }
+        }
+
+        // 卡片式展示距离
+        function showDistanceCard(matrix, selectedIndices, startIdx) {
+            var n = selectedIndices.length;
+            var spotNames = selectedIndices.map(function(idx) {
+                return markersData[idx].name;
+            });
+            
+            // 计算总路程（贪心算法）
+            var visited = Array(n).fill(false);
+            var route = [0];
+            visited[0] = true;
+            for (var k = 1; k < n; k++) {
+                var last = route[route.length - 1];
+                var nearest = -1;
+                var minDist = Infinity;
+                for (var j = 0; j < n; j++) {
+                    if (!visited[j] && matrix[last][j] < minDist) {
+                        minDist = matrix[last][j];
+                        nearest = j;
+                    }
+                }
+                if (nearest !== -1) {
+                    route.push(nearest);
+                    visited[nearest] = true;
+                }
+            }
+            var totalDistance = 0;
+            for (var i = 0; i < route.length - 1; i++) {
+                totalDistance += matrix[route[i]][route[i + 1]];
+            }
+            
+            // 构建卡片式HTML
+            var html = '<div style="background: #f8f9fa; border-radius: 12px; padding: 12px; margin-bottom: 12px;">';
+            html += '<div style="font-size: 14px; font-weight: 600; color: #2196F3; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #2196F3;">📊 景点距离分析</div>';
+            
+            // 统计信息（紧凑版）
+            html += '<div style="display: flex; gap: 8px; margin-bottom: 12px;">';
+            html += '<div style="flex: 1; background: #f0f0f0; border-radius: 6px; padding: 4px; text-align: center;">';
+            html += '<div style="font-size: 14px; font-weight: bold; color: #2196F3;">' + n + '</div>';
+            html += '<div style="font-size: 10px; color: #666;">参与景点</div>';
+            html += '</div>';
+            html += '<div style="flex: 1; background: #f0f0f0; border-radius: 6px; padding: 4px; text-align: center;">';
+            html += '<div style="font-size: 14px; font-weight: bold; color: #FF9800;">' + (n * (n - 1) / 2) + '</div>';
+            html += '<div style="font-size: 10px; color: #666;">两两组合</div>';
+            html += '</div>';
+            html += '<div style="flex: 1; background: #f0f0f0; border-radius: 6px; padding: 4px; text-align: center;">';
+            html += '<div style="font-size: 14px; font-weight: bold; color: #4CAF50;">' + totalDistance.toFixed(1) + '</div>';
+            html += '<div style="font-size: 10px; color: #666;">总路程km</div>';
+            html += '</div>';
+            html += '</div>';
+            
+            // 景点列表
+            html += '<div style="margin-bottom: 12px;">';
+            html += '<div style="font-size: 12px; font-weight: 600; color: #333; margin-bottom: 8px;">📍 参与景点列表</div>';
+            html += '<div style="display: flex; flex-wrap: wrap; gap: 6px;">';
+            spotNames.forEach(function(name, idx) {
+                html += '<span style="background: #e3f2fd; color: #2196F3; padding: 4px 10px; border-radius: 20px; font-size: 11px;">' + (idx + 1) + '. ' + name + '</span>';
+            });
+            html += '</div></div>';
+            
+            // 距离卡片（按景点分组）
+            html += '<details open><summary style="cursor: pointer; font-size: 12px; font-weight: 600; color: #333; margin-bottom: 8px;">📏 详细距离</summary>';
+            html += '<div style="max-height: 250px; overflow-y: auto;">';
+            
+            for (var i = 0; i < n; i++) {
+                html += '<div style="background: white; border-radius: 8px; margin-bottom: 8px; padding: 8px; border: 1px solid #eee;">';
+                html += '<div style="font-weight: 600; color: #2196F3; margin-bottom: 6px;">' + (i + 1) + '. ' + spotNames[i] + '</div>';
+                html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+                for (var j = 0; j < n; j++) {
+                    if (i !== j) {
+                        var dist = matrix[i][j];
+                        html += '<span style="background: #f5f5f5; padding: 3px 8px; border-radius: 15px; font-size: 11px;">';
+                        html += '➜ ' + spotNames[j].substring(0, 8) + ': ' + dist.toFixed(1) + ' km';
+                        html += '</span>';
+                    }
+                }
+                html += '</div></div>';
+            }
+            
+            html += '</div></details>';
+            
+            // 推荐顺序
+            var routeNames = route.map(function(idx) {
+                return spotNames[idx];
+            });
+            html += '<div style="margin-top: 12px; background: #e8f5e9; border-radius: 8px; padding: 8px;">';
+            html += '<div style="font-size: 12px; font-weight: 600; color: #4CAF50;">🎯 推荐游览顺序</div>';
+            html += '<div style="font-size: 11px; margin-top: 6px;">';
+            routeNames.forEach(function(name, idx) {
+            if (idx === 0) {
+                html += '<div style="margin: 2px 0;">';
+                html += '<span style="display: inline-block; width: 20px;">🚩</span>';
+                html += '<span>' + (idx + 1) + '. ' + name + '</span>';
+                html += '</div>';
+            } else {
+                html += '<div style="margin: 2px 0;">';
+                html += '<span style="display: inline-block; width: 20px;">📍</span>';
+                html += '<span>' + (idx + 1) + '. ' + name + '</span>';
+                html += '</div>';
+            }         
+            });
+            html += '<div style="margin-top: 6px; padding-top: 4px; border-top: 1px dashed #ccc;">📏 总路程: ' + totalDistance.toFixed(2) + ' 公里</div>';
+            html += '</div></div>';
+                        
+            // 直接绘制路线
+            drawOptimizeRoute(selectedIndices, route);
+            document.getElementById('distanceResult').innerHTML = html;
+        }       
+
+        // 在地图上绘制优化后的路线
+        function drawOptimizeRoute(selectedIndices, routeOrder) {
+            // 清除之前的优化路线和标签
+            if (window.optimizeLines) {
+                for (var i = 0; i < window.optimizeLines.length; i++) {
+                    map.removeOverlay(window.optimizeLines[i]);
+                }
+            }
+            if (window.optimizeLabels) {
+                for (var i = 0; i < window.optimizeLabels.length; i++) {
+                    map.removeOverlay(window.optimizeLabels[i]);
+                }
+            }
+            window.optimizeLines = [];
+            window.optimizeLabels = [];
+            
+            var allPoints = [];
+            
+            for (var i = 0; i < routeOrder.length - 1; i++) {
+                var fromIdx = selectedIndices[routeOrder[i]];
+                var toIdx = selectedIndices[routeOrder[i + 1]];
+                
+                var fromPoint = new BMap.Point(markersData[fromIdx].lng, markersData[fromIdx].lat);
+                var toPoint = new BMap.Point(markersData[toIdx].lng, markersData[toIdx].lat);
+                
+                // 计算距离（公里）
+                var distance = getStraightDistance(
+                    markersData[fromIdx].lat, markersData[fromIdx].lng,
+                    markersData[toIdx].lat, markersData[toIdx].lng
+                );
+                var distanceText = distance.toFixed(1) + ' km';
+                
+                // 绘制紫色实线
+                var line = new BMap.Polyline([fromPoint, toPoint], {
+                    strokeColor: "#9C27B0",
+                    strokeWeight: 5,
+                    strokeOpacity: 0.8,
+                    strokeStyle: "solid"
+                });
+                map.addOverlay(line);
+                window.optimizeLines.push(line);
+                
+                // 计算中点坐标
+                var midLng = (markersData[fromIdx].lng + markersData[toIdx].lng) / 2;
+                var midLat = (markersData[fromIdx].lat + markersData[toIdx].lat) / 2;
+                var midPoint = new BMap.Point(midLng, midLat);
+                
+                // 创建距离标签
+                var label = new BMap.Label(distanceText, {
+                    position: midPoint,
+                    offset: new BMap.Size(-25, -12)  // 偏移量使标签居中
+                });
+                label.setStyle({
+                    backgroundColor: 'white',
+                    color: '#9C27B0',
+                    fontSize: '11px',
+                    fontWeight: 'bold',
+                    padding: '2px 6px',
+                    borderRadius: '12px',
+                    border: '1px solid #9C27B0',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                    whiteSpace: 'nowrap'
+                });
+                map.addOverlay(label);
+                window.optimizeLabels.push(label);
+                
+                allPoints.push(fromPoint, toPoint);
+            }
+            
+            // 调整视野
+            if (allPoints.length > 0) {
+                var bounds = new BMap.Bounds();
+                for (var i = 0; i < allPoints.length; i++) {
+                    bounds.extend(allPoints[i]);
+                }
+                map.setViewport(bounds);
+            }
+            
+            // 显示小提示
+            var tooltip = document.createElement('div');
+            tooltip.innerHTML = '✅ 优化路线已绘制（紫色实线，已标注距离）';
+            tooltip.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#9C27B0; color:white; padding:4px 8px; border-radius:4px; font-size:10px; z-index:10000;';
+            document.body.appendChild(tooltip);
+            setTimeout(function() { tooltip.remove(); }, 2000);
+        }
+
+        // 清除优化路线
+        function clearOptimizeLine() {
+            if (window.optimizeLines) {
+                for (var i = 0; i < window.optimizeLines.length; i++) {
+                    map.removeOverlay(window.optimizeLines[i]);
+                }
+                window.optimizeLines = [];
+            }
+            if (window.optimizeLabels) {
+                for (var i = 0; i < window.optimizeLabels.length; i++) {
+                    map.removeOverlay(window.optimizeLabels[i]);
+                }
+                window.optimizeLabels = [];
+            }
+
+            clearAllCustomLines();
+
+            // 清除结果面板
+            var resultDiv = document.getElementById('distanceResult');
+            if (resultDiv) {
+                resultDiv.innerHTML = '<strong>📊 搜索结果：</strong><br>点击按钮查看周边信息';
+            }
+        }
+
+        // 更新优化面板的景点列表
+        function updateOptimizePanel() {
+            var container = document.getElementById('optimizeSpotList');
+            var startSelect = document.getElementById('optimizeStartPoint');
+            if (!container) return;
+            
+            var html = '';
+            startSelect.innerHTML = '<option value="">请选择起点</option>';
+            
+            markersData.forEach(function(spot, idx) {
+                html += '<div style="margin: 5px 0;">';
+                html += '<label style="cursor: pointer;">';
+                html += '<input type="checkbox" class="optimize-checkbox" value="' + idx + '" style="margin-right: 6px;">';
+                html += '<span style="font-size: 12px;">' + spot.name + '</span>';
+                html += '</label>';
+                html += '</div>';
+                
+                var option = document.createElement('option');
+                option.value = idx;
+                option.textContent = spot.name;
+                startSelect.appendChild(option);
+            });
+            
+            container.innerHTML = html;
+
+            if (markersData.length === 0) {
+                container.innerHTML = '<div style="color: #999; text-align: center; padding: 10px;">暂无景点，请先添加</div>';
+            }
+    
+            // 绑定全选功能
+            var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.onclick = function() {
+                    var checkboxes = document.querySelectorAll('.optimize-checkbox');
+                    checkboxes.forEach(function(cb) {
+                        cb.checked = selectAllCheckbox.checked;
+                    });
+                };
+            }
+
+            // 起点下拉框联动复选框（增强版）
+            if (startSelect) {
+                var previousStart = null;
+                startSelect.onchange = function() {
+                    var selectedIdx = parseInt(this.value);
+                    if (isNaN(selectedIdx)) return;
+                    
+                    var checkboxes = document.querySelectorAll('.optimize-checkbox');
+                    
+                    // 取消旧起点的勾选（可选）
+                    if (previousStart !== null && previousStart !== selectedIdx) {
+                        if (checkboxes[previousStart]) {
+                            checkboxes[previousStart].checked = false;
+                        }
+                    }
+                    
+                    // 勾选新起点
+                    if (checkboxes[selectedIdx]) {
+                        checkboxes[selectedIdx].checked = true;
+                    }
+                    
+                    previousStart = selectedIdx;
+                };
+            }
+        }
+
+        // <!---------------------------------------- 周边搜索模块 ---------------------------------------->
+        // 更新中心点下拉框（当景点变化时）
+        // function updateSearchCenterSelect() {
+        //     var select = document.getElementById('searchCenter');
+        //     if (!select) return;
+            
+        //     // 保留第一个选项
+        //     var html = '<option value="map">📍 点击地图选点</option>';
+            
+        //     // 添加已添加的景点作为中心点选项
+        //     markersData.forEach(function(spot, idx) {
+        //         html += '<option value="spot_' + idx + '">📍 ' + spot.name + '</option>';
+        //     });
+            
+        //     select.innerHTML = html;
+        // }
+
+        function updateSearchCenterSpotSelect() {
+            var select = document.getElementById('searchCenterSpot');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">请选择景点</option>';
+            markersData.forEach(function(spot, idx) {
+                var option = document.createElement('option');
+                option.value = idx;
+                option.textContent = spot.name;
+                select.appendChild(option);
+            });
+        }
+
+        // 获取当前选择的中心点坐标
+        function getCurrentCenterPoint() {
+            if (currentSearchCenter) {
+                return currentSearchCenter;
+            }
+            // 其次检查景点选择
+            var searchCenterSpot = document.getElementById('searchCenterSpot');
+            if (searchCenterSpot && searchCenterSpot.value) {
+                var idx = parseInt(searchCenterSpot.value);
+                var spot = markersData[idx];
+                if (spot) {
+                    return new BMap.Point(spot.lng, spot.lat);
+                }
+            }
+            return null;
+        }
+
+        // 清除搜索结果
+        function clearSearchResults() {
+            // 清除结果面板
+            var resultDiv = document.getElementById('distanceResult');
+            if (resultDiv) {
+                resultDiv.innerHTML = '<strong>📊 搜索结果：</strong><br>点击按钮查看周边信息';
+            }
+            
+            // 清除地图上的搜索结果标记
+            for (var i = 0; i < searchMarkers.length; i++) {
+                map.removeOverlay(searchMarkers[i]);
+            }
+            searchMarkers = [];
+            
+            // 重置标记状态
+            markersVisible = false;
+            
+            // 清空保存的POI
+            currentSearchPois = [];
+            
+            // 清除选点临时标记（如果存在）
+            if (currentPickedMarker) {
+                map.removeOverlay(currentPickedMarker);
+                currentPickedMarker = null;
+            }
+            
+            // 重置选点状态
+            isPickingLocation = false;
+            var pickBtn = document.getElementById('startMapPickBtn');
+            if (pickBtn) {
+                pickBtn.textContent = '📍 地图选点';
+                pickBtn.style.background = '#2196F3';
+            }
+            
+            var infoDiv = document.getElementById('selectedPointInfo');
+            if (infoDiv) {
+                infoDiv.innerHTML = '';
+                infoDiv.style.display = 'none';
+            }
+            
+            // 清空中心点坐标
+            currentSearchCenter = null;
+            
+            console.log('已清除搜索结果');
+        }
+             
+        // 当前选中的子分类（支持多选）
+        var selectedSubTypes = [];  // 改为数组，支持多选
+        var originalMainType = '';  // 保存原始主类型名称
+
+        // 更新右侧二级菜单（支持多选）
+        function showSubMenu(mainType) {
+            var mainTypeData = categoryMap[mainType];
+            var menu = document.getElementById('subTypeMenu');
+            var title = document.getElementById('subMenuTitle');
+            var container = document.getElementById('subMenuItems');
+            
+            // 获取下拉框的位置
+            var select = document.getElementById('searchMainType');
+            var rect = select.getBoundingClientRect();
+            
+            // 保存原始主类型名称
+            originalMainType = mainTypeData.name;
+            
+            title.innerHTML = mainTypeData.icon + ' ' + mainTypeData.name + '分类（可多选）';
+            
+            var html = '';
+            for (var i = 0; i < mainTypeData.subTypes.length; i++) {
+                var sub = mainTypeData.subTypes[i];
+                var isChecked = selectedSubTypes.includes(sub.value);
+                html += '<div class="sub-menu-item" data-value="' + sub.value + '" data-label="' + sub.label + '" style="padding: 8px 16px; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; align-items: center;">';
+                html += '<span>' + sub.label + '</span>';
+                html += '<span style="color: #2196F3; font-size: 14px;">' + (isChecked ? '✓' : '') + '</span>';
+                html += '</div>';
+            }
+            container.innerHTML = html;
+            
+            // 绑定点击事件（支持多选）
+            var items = container.querySelectorAll('.sub-menu-item');
+            for (var i = 0; i < items.length; i++) {
+                items[i].onclick = function(e) {
+                    e.stopPropagation();
+                    var value = this.getAttribute('data-value');
+                    var label = this.getAttribute('data-label');
+                    var checkSpan = this.querySelector('span:last-child');
+                    
+                    if (selectedSubTypes.includes(value)) {
+                        // 取消选中
+                        var index = selectedSubTypes.indexOf(value);
+                        selectedSubTypes.splice(index, 1);
+                        checkSpan.innerHTML = '';
+                        this.style.background = '';
+                    } else {
+                        // 选中
+                        selectedSubTypes.push(value);
+                        checkSpan.innerHTML = '✓';
+                        this.style.background = '#e3f2fd';
+                    }
+                    
+                    // 更新一级下拉框的显示
+                    updateMainTypeDisplay();
+                };
+            }
+            
+            // 显示菜单（放在下拉框右侧）
+            menu.style.left = (rect.right + 5) + 'px';
+            menu.style.top = (rect.top - 10) + 'px';
+            menu.style.display = 'block';
+        }
+
+        // 更新一级下拉框显示
+        function updateMainTypeDisplay() {
+            var select = document.getElementById('searchMainType');
+            var mainType = select.value;
+            var mainTypeData = categoryMap[mainType];
+            
+            if (selectedSubTypes.length > 0) {
+                // 显示选中的子分类（用逗号连接）
+                var selectedLabels = [];
+                for (var i = 0; i < selectedSubTypes.length; i++) {
+                    for (var j = 0; j < mainTypeData.subTypes.length; j++) {
+                        if (mainTypeData.subTypes[j].value === selectedSubTypes[i]) {
+                            selectedLabels.push(mainTypeData.subTypes[j].label);
+                            break;
+                        }
+                    }
+                }
+                // 更新下拉框显示（select 的选项文本需要临时修改）
+                var option = select.options[select.selectedIndex];
+                option.text = mainTypeData.icon + ' ' + selectedLabels.join('、');
+            } else {
+                // 恢复显示主类型
+                var option = select.options[select.selectedIndex];
+                option.text = mainTypeData.icon + ' ' + mainTypeData.name;
+            }
+        }
+
+        // 恢复原始显示（点击空白时）
+        function restoreMainTypeDisplay() {
+            var select = document.getElementById('searchMainType');
+            var mainType = select.value;
+            var mainTypeData = categoryMap[mainType];
+            var option = select.options[select.selectedIndex];
+            option.text = mainTypeData.icon + ' ' + mainTypeData.name;
+        }
+
+        function hideSubMenu() {
+            var menu = document.getElementById('subTypeMenu');
+            if (menu) {
+                menu.style.display = 'none';
+            }
+            // 点击空白时，如果有选中的子分类，保持显示；如果没有，恢复原始
+            // 注意：不在这里恢复，保持用户的选择
+        }
+
+        // 绑定事件
+        var searchMainType = document.getElementById('searchMainType');
+        if (searchMainType) {
+            // 点击下拉框时显示右侧菜单
+            searchMainType.onclick = function(e) {
+                e.stopPropagation();
+                var mainType = this.value;
+                showSubMenu(mainType);
+            };
+            
+            // 切换大类时重置子分类
+            searchMainType.onchange = function() {
+                selectedSubTypes = [];
+                restoreMainTypeDisplay();
+            };
+        }
+
+        // 显示搜索结果
+        // 全局变量存储搜索结果
+        var currentSearchResults = [];
+        var currentPage = 1;
+        var resultsPerPage = 5;
+
+        function displaySearchResults(pois, keyword, centerPoint, mainType) {
+            if (!pois || pois.length === 0) {
+                document.getElementById('distanceResult').innerHTML = '<strong>📊 搜索结果：</strong><br><span class="error">未找到相关结果</span>';
+                return;
+            }
+            
+            // 存储全局结果
+            currentSearchResults = pois;
+            currentPage = 1;
+            currentSearchKeyword = keyword;
+            currentSearchMainType = mainType;
+            
+            // 计算每个POI到中心点的距离
+            var results = [];
+            for (var i = 0; i < pois.length; i++) {
+                var poi = pois[i];
+                var point = poi.point || (poi.cp ? poi.cp : null);
+                if (!point) continue;
+                var distance = map.getDistance(centerPoint, point);
+                results.push({
+                    name: poi.title || poi.name,
+                    address: poi.address || '地址信息暂无',
+                    point: point,
+                    distance: distance,
+                    uid: poi.uid
+                });
+            }
+            
+            // 按距离排序
+            results.sort(function(a, b) {
+                return a.distance - b.distance;
+            });
+            
+            currentSearchResults = results;
+            
+            // 渲染第一页
+            renderSearchResultsPage(keyword);
+        }
+
+
+        function renderSearchResultsPage(keyword) {
+            var results = currentSearchResults;
+            var totalPages = Math.ceil(results.length / resultsPerPage);
+            var start = (currentPage - 1) * resultsPerPage;
+            var end = start + resultsPerPage;
+            var pageResults = results.slice(start, end);
+            
+            var keywordIcon = '';
+            if (keyword === '酒店') keywordIcon = '🏨';
+            else if (keyword === '美食') keywordIcon = '🍜';
+            else if (keyword === '景点') keywordIcon = '🏞️';
+            else if (keyword === '餐厅') keywordIcon = '🍽️';
+            else if (keyword === '咖啡厅') keywordIcon = '☕';
+            else keywordIcon = '📍';
+            
+            // 标题行，包含标题和标记按钮
+            var html = '<div style="background: #f8f9fa; border-radius: 12px; padding: 12px;">';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
+            html += '<div style="font-size: 14px; font-weight: 600; color: #2196F3;">' + keywordIcon + ' 搜索结果（共' + results.length + '个）</div>';
+            // 标记地图按钮
+            var btnText = (typeof markersVisible !== 'undefined' && markersVisible) ? '🗺️ 取消标记' : '⭐ 标记地图';
+            var btnStyle = (typeof markersVisible !== 'undefined' && markersVisible) ? 'background: #FF9800;' : 'background: #2196F3;';            
+            html += '<button id="markerToggleBtn" onclick="toggleMarkersFromPanel()" style="padding: 4px 10px; font-size: 11px; border: none; border-radius: 15px; color: white; cursor: pointer; ' + btnStyle + '">' + btnText + '</button>';
+            html += '</div>';
+
+
+            for (var i = 0; i < pageResults.length; i++) {
+                var r = pageResults[i];
+                var distKm = (r.distance / 1000).toFixed(1);
+                html += '<div style="background: white; border-radius: 8px; margin-bottom: 8px; padding: 8px; border: 1px solid #eee;">';
+                html += '<div style="font-weight: 600; color: #333; margin-bottom: 4px; font-size: 13px;">' + keywordIcon + ' ' + r.name + '</div>';
+                html += '<div style="font-size: 11px; color: #666;">📏 距离: ' + distKm + ' km</div>';
+                html += '<div style="font-size: 11px; color: #999;">📍 ' + (r.address.length > 30 ? r.address.substring(0, 30) + '...' : r.address) + '</div>';
+                html += '<div style="margin-top: 6px;">';
+                html += '<button onclick="locatePoint(' + r.point.lng + ', ' + r.point.lat + ', \'' + r.name.replace(/'/g, "\\'") + '\')" style="padding: 3px 10px; background: #2196F3; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 10px; margin-right: 6px;">📍 定位</button>';
+                html += '<button onclick="addSpotFromSearch(\'' + r.name.replace(/'/g, "\\'") + '\', ' + r.point.lng + ', ' + r.point.lat + ')" style="padding: 3px 10px; background: #4CAF50; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 10px;">➕ 添加景点</button>';
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            // 分页控件
+            if (totalPages > 1) {
+                html += '<div style="display: flex; justify-content: center; gap: 8px; margin-top: 8px;">';
+                if (currentPage > 1) {
+                    html += '<button onclick="goToPage(' + (currentPage - 1) + ', \'' + keyword + '\')" style="padding: 4px 10px; background: #ddd; border: none; border-radius: 15px; cursor: pointer; font-size: 11px;">◀ 上一页</button>';
+                }
+                html += '<span style="font-size: 11px; color: #666; padding: 4px 8px;">第 ' + currentPage + ' / ' + totalPages + ' 页</span>';
+                if (currentPage < totalPages) {
+                    html += '<button onclick="goToPage(' + (currentPage + 1) + ', \'' + keyword + '\')" style="padding: 4px 10px; background: #ddd; border: none; border-radius: 15px; cursor: pointer; font-size: 11px;">下一页 ▶</button>';
+                }
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            document.getElementById('distanceResult').innerHTML = html;
+        }
+
+        function toggleMarkersFromPanel() {
+            var btn = document.getElementById('markerToggleBtn');
+            
+            if (markersVisible) {
+                // 取消标记：清除地图上的标记
+                for (var i = 0; i < searchMarkers.length; i++) {
+                    map.removeOverlay(searchMarkers[i]);
+                }
+                searchMarkers = [];
+                markersVisible = false;
+                if (btn) {
+                    btn.innerHTML = '⭐ 标记地图';
+                    btn.style.background = '#2196F3';
+                }
+                console.log('已取消地图标记');
+            } else {
+                // 标记地图：添加标记
+                if (currentSearchPois.length === 0) {
+                    alert('请先搜索');
+                    return;
+                }
+                
+                for (var i = 0; i < currentSearchPois.length && i < 30; i++) {
+                    var poi = currentSearchPois[i];
+                    var point = poi.point || (poi.cp ? poi.cp : null);
+                    if (point) {
+                        // 点赞大拇指图标
+                        var canvas = document.createElement('canvas');
+                        canvas.width = 28;
+                        canvas.height = 28;
+                        var ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, 28, 28);
+                        ctx.fillStyle = '#FF9800';
+                        ctx.font = '24px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('⭐', 14, 14);
+                        
+                        var icon = new BMap.Icon(canvas.toDataURL(), new BMap.Size(28, 28));
+                        var marker = new BMap.Marker(point, { icon: icon });
+                        map.addOverlay(marker);
+                        searchMarkers.push(marker);
+                    }
+                }
+                markersVisible = true;
+                if (btn) {
+                    btn.innerHTML = '🗺️ 取消标记';
+                    btn.style.background = '#FF9800';
+                }
+                console.log('已添加 ' + searchMarkers.length + ' 个地图标记');
+            }
+        }
+
+        // 翻页函数
+        function goToPage(page, keyword) {
+            currentPage = page;
+            renderSearchResultsPage(keyword);
+        }
+
+        // 定位到搜索结果
+        function locatePoint(lng, lat, name) {
+            var point = new BMap.Point(lng, lat);
+            map.centerAndZoom(point, 16);
+            
+            var marker = new BMap.Marker(point);
+
+            map.addOverlay(marker);
+            setTimeout(function() {
+                map.removeOverlay(marker);
+            }, 3000);
+            
+            var tooltip = document.createElement('div');
+            tooltip.innerHTML = '📍 已定位到: ' + name;
+            tooltip.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#2196F3; color:white; padding:4px 8px; border-radius:4px; font-size:10px; z-index:10000;';
+            document.body.appendChild(tooltip);
+            setTimeout(function() { tooltip.remove(); }, 2000);
+        }
+
+        // 从搜索结果添加景点
+        function addSpotFromSearch(name, lng, lat) {
+            var exists = markersData.some(function(spot) {
+                return spot.name === name;
+            });
+            if (exists) {
+                alert('该景点已存在');
+                return;
+            }
+            markersData.push({ name: name, lng: lng, lat: lat });
+            saveSpotsToLocal();
+            refreshSpotList();
+            addAllMarkers();
+            updateSearchCenterSpotSelect();
+            
+            var tooltip = document.createElement('div');
+            tooltip.innerHTML = '✅ 已添加: ' + name;
+            tooltip.style.cssText = 'position:fixed; bottom:20px; left:20px; background:#4CAF50; color:white; padding:4px 8px; border-radius:4px; font-size:10px; z-index:10000;';
+            document.body.appendChild(tooltip);
+            setTimeout(function() { tooltip.remove(); }, 2000);
+        }
+
+        // 执行周边搜索
+        function searchNearby() {
+            // 清除之前的搜索结果
+            clearSearchResults();
+            // 重置搜索状态
+            currentSearchPois = [];
+            markersVisible = false;
+
+            for (var i = 0; i < searchMarkers.length; i++) {
+                map.removeOverlay(searchMarkers[i]);
+            }
+            searchMarkers = [];
+            
+            // 获取当前选中的主类型
+            var activeItem = document.querySelector('.main-type-item.active');
+            var mainType = activeItem ? activeItem.getAttribute('data-type') : 'hotel';
+            
+            // 获取搜索关键词列表（支持多选）
+            var mainTypeData = categoryMap[mainType];
+            var keywords = [];
+            if (selectedSubTypes.length === 0) {
+                // 没有选中任何子分类，使用主类型名称
+                keywords = [mainTypeData.name];
+            } else {
+                keywords = selectedSubTypes.slice(); // 复制数组
+            }
+            
+            var radius = parseInt(document.getElementById('searchRadius').value);
+            var centerPoint = getCurrentCenterPoint();
+            
+            if (!centerPoint) {
+                alert('请先选择中心点（点击地图选点或选择已有景点）');
+                return;
+            }
+
+            // 保存当前搜索参数
+            currentSearchPois = [];
+            currentSearchKeyword = keywords.join('、');
+            currentSearchCenter = centerPoint;
+            currentSearchMainType = mainType;
+            
+            document.getElementById('distanceResult').innerHTML = '<strong>⏳ 正在搜索 ' + keywords.length + ' 个分类...</strong><br><div class="loading">⏳ 请稍候...</div>';
+            
+            // 存储所有搜索结果
+            var allResults = [];
+            var currentIndex = 0;
+            var resultSet = new Set(); // 用于去重
+            
+            function searchNext() {
+                if (currentIndex >= keywords.length) {
+                    // 所有搜索完成，合并去重后显示
+                    // 去重（基于POI的uid或坐标）
+                    var uniqueResults = [];
+                    resultSet.clear();
+                    for (var i = 0; i < allResults.length; i++) {
+                        var poi = allResults[i];
+                        var uid = poi.uid || (poi.point ? poi.point.lng + ',' + poi.point.lat : '');
+                        if (!resultSet.has(uid)) {
+                            resultSet.add(uid);
+                            uniqueResults.push(poi);
+                        }
+                    }
+                    
+                    console.log('搜索完成，总结果:', allResults.length, '去重后:', uniqueResults.length);
+                    
+                    // 连锁酒店过滤（如果选中了连锁酒店）
+                    var isChainHotel = (selectedSubTypes && selectedSubTypes.includes('连锁酒店'));
+                    var pois = uniqueResults;
+                    
+                    if (isChainHotel && mainType === 'hotel') {
+                        var chainBrands = ['如家', '汉庭', '7天', '锦江之星', '全季', '亚朵', '维也纳', '桔子', '丽枫'];
+                        var filteredPois = [];
+                        for (var i = 0; i < uniqueResults.length; i++) {
+                            var title = uniqueResults[i].title || '';
+                            for (var j = 0; j < chainBrands.length; j++) {
+                                if (title.indexOf(chainBrands[j]) !== -1) {
+                                    filteredPois.push(uniqueResults[i]);
+                                    break;
+                                }
+                            }
+                        }
+                        pois = filteredPois;
+                        console.log('连锁酒店过滤后数量:', pois.length);
+                    }
+                    
+                    if (pois.length === 0) {
+                        var radiusKm = radius / 1000;
+                        document.getElementById('distanceResult').innerHTML = '<div style="background: #fff3e0; padding: 12px; border-radius: 8px;">附近 ' + radiusKm + ' 公里范围内未找到符合条件的「' + keywords.join('、') + '」。</div>';
+                        return;
+                    }
+                    
+                    currentSearchPois = pois;
+                    console.log('已保存POI，数量:', currentSearchPois.length);
+                    displaySearchResults(pois, keywords.join('、'), centerPoint, mainType);
+                    
+                } else {
+                    var keyword = keywords[currentIndex];
+                    console.log('搜索关键词:', keyword, '进度:', currentIndex + 1 + '/' + keywords.length);
+                    
+                    var localSearch = new BMap.LocalSearch(map, {
+                        renderOptions: { map: null, autoViewport: false },
+                        pageCapacity: 30,
+                        onSearchComplete: function() {
+                            if (localSearch.getStatus() === BMAP_STATUS_SUCCESS) {
+                                var results = localSearch.getResults();
+                                var pois = [];
+                                
+                                // 提取POI
+                                if (results && results.getPoi) {
+                                    for (var i = 0; i < 30; i++) {
+                                        var poi = results.getPoi(i);
+                                        if (!poi) break;
+                                        pois.push(poi);
+                                    }
+                                } else if (results && results.Cf) {
+                                    for (var i = 0; i < results.Cf.length; i++) {
+                                        pois.push(results.Cf[i]);
+                                    }
+                                } else if (results && results.Gg) {
+                                    for (var i = 0; i < results.Gg.length; i++) {
+                                        pois.push(results.Gg[i]);
+                                    }
+                                }
+                                
+                                console.log('关键词 "' + keyword + '" 找到', pois.length, '个结果');
+                                allResults = allResults.concat(pois);
+                            } else {
+                                console.log('关键词 "' + keyword + '" 搜索失败');
+                            }
+                            currentIndex++;
+                            searchNext();
+                        }
+                    });
+                    localSearch.searchNearby(keyword, centerPoint, radius);
+                }
+            }
+            
+            // 开始搜索
+            searchNext();
+        }
+
+        function clearSearchResults() {
+            // 清除结果面板
+            var resultDiv = document.getElementById('distanceResult');
+            if (resultDiv) {
+                resultDiv.innerHTML = '<strong>📊 搜索结果：</strong><br>点击按钮查看周边信息';
+            }
+            
+            // 清除地图上的标记
+            for (var i = 0; i < searchMarkers.length; i++) {
+                map.removeOverlay(searchMarkers[i]);
+            }
+            searchMarkers = [];
+            
+            // 重置标记状态
+            markersVisible = false;
+            
+            // 清空保存的POI
+            currentSearchPois = [];
+
+            // 清除选点临时标记
+            if (window.tempMarker) {
+                map.removeOverlay(window.tempMarker);
+                window.tempMarker = null;
+            }
+            
+            console.log('已清除搜索结果');
+        }
+
+        // <!---------------------------------------- 其他功能 ---------------------------------------->
+        // 添加地图标记
+        function addAllMarkers() {
+            markers.forEach(m => map.removeOverlay(m));
+            markers = [];
+            var redIcon = new BMap.Icon("http://api.map.baidu.com/images/markers.png", new BMap.Size(23,25), {
+                offset: new BMap.Size(10,25),
+                imageOffset: new BMap.Size(0,0)
+            });
+            markersData.forEach((item, idx) => {
+                var pt = new BMap.Point(item.lng, item.lat);
+                var mk = new BMap.Marker(pt, { icon: redIcon });
+                var label = new BMap.Label('📍 ' + item.name, { 
+                    offset: new BMap.Size(8, -8), 
+                    position: pt 
+                });
+                label.setStyle({
+                    backgroundColor: "white",
+                    border: "none",
+                    fontSize: "12px",
+                    padding: "2px 6px",
+                    fontWeight: "bold",
+                    borderRadius: "20px",
+                    fontFamily: "'Comic Neue', 'Comic Sans MS', 'PingFang SC', 'Microsoft YaHei', cursive",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)"
+                });
+
+                mk.setLabel(label);
+                mk.addEventListener("click", () => {
+                    var info = new BMap.InfoWindow(`<h4>${item.name}</h4><p>经度:${item.lng}<br>纬度:${item.lat}</p>`);
+                    map.openInfoWindow(info, pt);
+                });
+                map.addOverlay(mk);
+                markers.push(mk);
+            });
+        }
+
+        function setMapView() {
+            if (markersData.length === 0) return;
+            var bounds = new BMap.Bounds();
+            markersData.forEach(p => bounds.extend(new BMap.Point(p.lng, p.lat)));
+            map.setViewport(bounds);
+        }
+
+        // 更新下拉框
+        function updateSelectOptions() {
+            var startSel = document.getElementById('startPoint');
+            var endSel = document.getElementById('endPoint');
+            if (!startSel || !endSel) return;
+            
+            startSel.innerHTML = '<option value="">请选择起点</option>';
+            endSel.innerHTML = '<option value="">请选择终点</option>';
+            
+            markersData.forEach(function(item, index) {
+                var opt1 = document.createElement('option');
+                opt1.value = index;
+                opt1.textContent = item.name;
+                startSel.appendChild(opt1);
+                
+                var opt2 = document.createElement('option');
+                opt2.value = index;
+                opt2.textContent = item.name;
+                endSel.appendChild(opt2);
+            });
+        }
+
+        // 刷新景点列表显示（添加距离矩阵清空）
+        function refreshSpotList() {
+            var container = document.getElementById('spotListContainer');
+            var countSpan = document.getElementById('spotCount');
+            if (!container) return;
+            
+            if (markersData.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无景点，请搜索添加</div>';
+                if (countSpan) countSpan.textContent = '(0)';
+                // 清空距离矩阵和结果显示
+                distanceMatrix = [];
+                document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br>请先添加景点';
+                // 清空起点终点下拉框
+                updateSelectOptions();
+            } else {
+                var html = '';
+                markersData.forEach((spot, idx) => {
+                    html += `
+                        <div class="spot-item">
+                            <div class="spot-name">
+                                <span class="idx">${idx+1}</span>
+                                ${spot.name}
+                            </div>
+                            <button onclick="removeSpot(${idx})">删除</button>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                if (countSpan) countSpan.textContent = `(${markersData.length})`;
+            }
+            updateSelectOptions();
+            updateOptimizePanel();  // 确保这一行存在
+            updateSearchCenterSpotSelect();   // 更新中心点选项
+
+        }   
+
+
+        // 删除指定景点
+        window.removeSpot = function(index) {
+            if (markersData.length <= 1) {
+                alert('至少保留一个景点');
+                return;
+            }
+            markersData.splice(index, 1);
+            
+            // ========== 新增：保存到本地存储 ==========
+            saveSpotsToLocal();
+            // ========================================
+            
+            refreshSpotList();
+            addAllMarkers();
+            setMapView();
+            distanceMatrix = [];
+            clearRoutes();
+            
+            document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br>请先添加景点';
+        };
+
+        // 搜索景点（使用百度地图JavaScript API内置搜索，无需额外权限）
+        function doSearch() {
+            var keyword = document.getElementById('searchKeyword').value.trim();
+            if (!keyword) {
+                alert('请输入搜索关键词');
+                return;
+            }
+            
+            var resultDiv = document.getElementById('searchResults');
+            resultDiv.innerHTML = '<div class="loading">⏳ 正在搜索...</div>';
+            
+            var localSearch = new BMap.LocalSearch(map, {
+                onSearchComplete: function() {
+                    if (localSearch.getStatus() === BMAP_STATUS_SUCCESS) {
+                        var results = localSearch.getResults();
+                        console.log('搜索结果对象：', results);
+                        
+                        // 尝试多种方式获取POI数组
+                        var pois = null;
+                        
+                        // 方式1：直接是数组
+                        if (Array.isArray(results)) {
+                            pois = results;
+                        }
+                        // 方式2：有 ok 属性且是数组
+                        else if (results.ok && Array.isArray(results.ok)) {
+                            pois = results.ok;
+                        }
+                        // 方式3：有 getPoi 方法（旧版API）
+                        else if (typeof results.getPoi === 'function') {
+                            var temp = [];
+                            var i = 0;
+                            while (true) {
+                                var poi = results.getPoi(i);
+                                if (!poi) break;
+                                temp.push(poi);
+                                i++;
+                            }
+                            pois = temp;
+                        }
+                        // 方式4：遍历对象找数组
+                        else {
+                            for (var key in results) {
+                                if (Array.isArray(results[key]) && results[key].length > 0) {
+                                    pois = results[key];
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        console.log('提取到的POI数组：', pois);
+                        
+                        if (pois && pois.length > 0) {
+                            var html = '';
+                            for (var i = 0; i < Math.min(pois.length, 8); i++) {
+                                var poi = pois[i];
+                                
+                                // 兼容不同的POI对象格式
+                                var name = poi.title || poi.name || (poi.getTitle ? poi.getTitle() : '');
+                                var address = poi.address || (poi.getAddress ? poi.getAddress() : '');
+                                var lng = null, lat = null;
+                                
+                                if (poi.point) {
+                                    lng = poi.point.lng;
+                                    lat = poi.point.lat;
+                                } else if (poi.getPoint) {
+                                    var point = poi.getPoint();
+                                    lng = point.lng;
+                                    lat = point.lat;
+                                } else if (poi.lng && poi.lat) {
+                                    lng = poi.lng;
+                                    lat = poi.lat;
+                                }
+                                
+                                if (name && lng && lat) {
+                                    var safeName = name.replace(/'/g, "\\'");
+                                    html += `
+                                        <div class="search-result-item" onclick="addSpot('${safeName}', ${lng}, ${lat})">
+                                            <strong>${name}</strong>
+                                            <div class="address">${address || ''}</div>
+                                        </div>
+                                    `;
+                                }
+                            }
+                            
+                            if (html) {
+                                resultDiv.innerHTML = html;
+                            } else {
+                                resultDiv.innerHTML = '<div class="empty-tip">无法解析搜索结果，请尝试其他关键词</div>';
+                            }
+                        } else {
+                            resultDiv.innerHTML = '<div class="empty-tip">未找到相关地点，请尝试更精确的关键词</div>';
+                        }
+                    } else {
+                        resultDiv.innerHTML = '<div class="error">搜索失败，请重试</div>';
+                        console.error('搜索失败，状态码：', localSearch.getStatus());
+                    }
+                }
+            });
+            
+            localSearch.search(keyword);
+        }    
+
+        // 添加景点
+        window.addSpot = function(name, lng, lat) {
+            var exists = markersData.some(spot => spot.name === name);
+            if (exists) {
+                alert('该景点已存在');
+                return;
+            }
+            
+            markersData.push({ name: name, lng: lng, lat: lat });
+            
+            // ========== 新增：保存到本地存储 ==========
+            saveSpotsToLocal();
+            // ========================================
+            
+            refreshSpotList();
+            addAllMarkers();
+            setMapView();
+            distanceMatrix = [];
+            clearRoutes();
+            
+            document.getElementById('searchResults').innerHTML = '<div class="empty-tip">✨ 景点已添加，可继续搜索</div>';
+            document.getElementById('searchKeyword').value = '';
+        };        
+
+        // 清空所有景点
+        function clearAllSpots() {
+            if (confirm('确定清空所有景点吗？')) {
+                markersData = [];
+                
+                // ========== 新增：保存到本地存储 ==========
+                saveSpotsToLocal();
+                // ========================================
+                
+                refreshSpotList();
+                markers.forEach(m => map.removeOverlay(m));
+                markers = [];
+                clearRoutes();
+                distanceMatrix = [];
+                document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br>请先添加景点';
+                updateSelectOptions();
+                map.centerAndZoom(new BMap.Point(118.15, 29.78), 10);
+                console.log('已清空所有景点和地图覆盖物');
+            }
+        }
+
+        // 初始化地图
+        function initMap() {
+            map = new BMap.Map('map');
+            map.centerAndZoom(new BMap.Point(118.15, 29.78), 10);
+            map.enableScrollWheelZoom();
+            map.addControl(new BMap.NavigationControl());
+            
+            // ========== 新增：加载保存的景点 ==========
+            var hasSavedSpots = loadSpotsFromLocal();
+            if (!hasSavedSpots) {
+                // 如果没有保存的数据，可以添加默认景点（可选）
+                // markersData = [];  // 默认空列表
+            }
+            // ========================================
+            
+            // 绑定事件
+            document.getElementById('searchBtn').onclick = doSearch;
+            document.getElementById('clearAllSpotsBtn').onclick = clearAllSpots;
+            document.getElementById('calcDistanceBtn').onclick = calcTwoPoints;
+            document.getElementById('calcAllBtn').onclick = calcAllDistances;
+            // document.getElementById('optimizeBtn').onclick = optimizeRoutePlan;
+            document.getElementById('clearLinesBtn').onclick = clearLinesOnly;
+            document.getElementById('toggleMapPickBtn').onclick = toggleMapPickMode;
+            document.getElementById('clearOptimizeLine').onclick = clearOptimizeLine;
+            // 新增周边搜索事件
+            document.getElementById('searchNearbyBtn').onclick = searchNearby;
+            document.getElementById('clearSearchResultsBtn').onclick = clearSearchResults;
+
+            // 周边搜索 - 一级下拉框点击显示右侧二级菜单
+            var searchMainType = document.getElementById('searchMainType');
+            if (searchMainType) {
+                searchMainType.onclick = function(e) {
+                    e.stopPropagation();
+                    var mainType = this.value;
+                    showSubMenu(mainType);
+                };
+                
+                searchMainType.onchange = function() {
+                    selectedSubTypes = [];
+                    restoreMainTypeDisplay();
+                };
+            }
+
+            // 点击其他地方关闭菜单
+            document.addEventListener('click', function(e) {
+                var menu = document.getElementById('subTypeMenu');
+                var select = document.getElementById('searchMainType');
+                if (menu && menu.style.display === 'block') {
+                    if (!menu.contains(e.target) && e.target !== select) {
+                        hideSubMenu();
+                    }
+                }
+            });
+
+            // 开始搜索按钮
+            var searchNearbyBtn = document.getElementById('searchNearbyBtn');
+            if (searchNearbyBtn) {
+                searchNearbyBtn.onclick = searchNearby;
+            }
+
+            // 清除结果按钮
+            var clearSearchResultsBtn = document.getElementById('clearSearchResultsBtn');
+            console.log('清除结果按钮:', clearSearchResultsBtn);  // 添加调试
+            if (clearSearchResultsBtn) {
+                clearSearchResultsBtn.onclick = function() {
+                    console.log('按钮被点击了');  // 添加调试
+                    clearSearchResults();
+                };
+            }
+
+            // 起点改变时清除路线
+            document.getElementById('startPoint').addEventListener('change', function() {
+                clearAllCustomLines();
+            });
+            // 终点改变时清除路线
+            document.getElementById('endPoint').addEventListener('change', function() {
+                clearAllCustomLines();
+            });
+            // 出行方式改变时清除路线
+            document.getElementById('travelMode').addEventListener('change', function() {
+                clearAllCustomLines();
+            });
+            
+            document.getElementById('searchKeyword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') doSearch();
+            });
+
+            document.getElementById('resetStorageBtn').onclick = function() {
+                if (confirm('重置存储后，所有保存的景点将被清除。确定吗？')) {
+                    localStorage.removeItem('travelSpots');
+                    markersData = [];
+                    refreshSpotList();
+                    addAllMarkers();
+                    clearRoutes();
+                    distanceMatrix = [];
+                    document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br>请先添加景点';
+                    
+                    // 如果选点模式开启中，关闭它
+                    if (isMapPickMode) {
+                        toggleMapPickMode();
+                    }
+                    
+                    alert('存储已重置，刷新页面后将恢复空白');
+                }
+            };
+
+            // ========== 中心点选择逻辑 ==========
+            // var isPickingLocation = false; // 是否处于地图选点模式
+            // var currentPickedMarker = null; // 当前选中的临时标记
+
+            // // 获取页面元素
+            // var searchCenterSpot = document.getElementById('searchCenterSpot');
+            // var startMapPickBtn = document.getElementById('startMapPickBtn');
+            // var selectedPointInfoSpan = document.getElementById('selectedPointInfo');
+
+            // // 1. 从景点选择
+            // if (searchCenterSpot) {
+            //     // 当切换景点时，清除地图选点状态和坐标
+            //     searchCenterSpot.addEventListener('change', function() {
+            //         if (this.value) {
+            //             // 如果处于选点模式，先关闭
+            //             if (isPickingLocation) {
+            //                 isPickingLocation = false;
+            //                 if (startMapPickBtn) {
+            //                     startMapPickBtn.textContent = '📍 地图选点';
+            //                     startMapPickBtn.style.background = '#2196F3';
+            //                 }
+            //                 // 清除临时标记
+            //                 if (currentPickedMarker) {
+            //                     map.removeOverlay(currentPickedMarker);
+            //                     currentPickedMarker = null;
+            //                 }
+            //                 // 清除提示信息
+            //                 if (selectedPointInfoSpan) {
+            //                     selectedPointInfoSpan.innerHTML = '';
+            //                     selectedPointInfoSpan.style.display = 'none';
+            //                 }
+            //             }
+            //             // 更新地图视野到所选景点
+            //             var selectedIdx = parseInt(this.value);
+            //             var spot = markersData[selectedIdx];
+            //             if (spot) {
+            //                 map.centerAndZoom(new BMap.Point(spot.lng, spot.lat), 14);
+            //                 // 同时记录为中心点
+            //                 currentSearchCenter = new BMap.Point(spot.lng, spot.lat);
+            //                 if (selectedPointInfoSpan) {
+            //                     selectedPointInfoSpan.innerHTML = '📍 已选点: ' + spot.lng.toFixed(6) + ', ' + spot.lat.toFixed(6);
+            //                     selectedPointInfoSpan.style.display = 'block';
+            //                     selectedPointInfoSpan.style.color = '#4CAF50';
+            //                 }
+            //             }
+            //         } else {
+            //             // 未选择景点时，清空中心点
+            //             currentSearchCenter = null;
+            //             if (selectedPointInfoSpan) {
+            //                 selectedPointInfoSpan.innerHTML = '';
+            //                 selectedPointInfoSpan.style.display = 'none';
+            //             }
+            //         }
+            //     });
+            //     // 初始加载景点列表
+            //     if (typeof updateSearchCenterSpotSelect === 'function') {
+            //         updateSearchCenterSpotSelect();
+            //     }
+            // }
+
+            // // 2. 地图选点按钮
+            // if (startMapPickBtn) {
+            //     startMapPickBtn.addEventListener('click', function() {
+            //         if (isPickingLocation) {
+            //             // 关闭选点模式，清除标记和提示
+            //             isPickingLocation = false;
+            //             startMapPickBtn.textContent = '📍 地图选点';
+            //             startMapPickBtn.style.background = '#2196F3';
+                        
+            //             // 清除临时标记
+            //             if (currentPickedMarker) {
+            //                 map.removeOverlay(currentPickedMarker);
+            //                 currentPickedMarker = null;
+            //             }
+                        
+            //             // 清除提示信息（但保留已选点信息）
+            //             // 注意：不清除已选点信息，只清除选点模式提示
+            //             if (selectedPointInfoSpan && selectedPointInfoSpan.innerHTML.indexOf('请在地图上点击') !== -1) {
+            //                 selectedPointInfoSpan.innerHTML = '';
+            //                 selectedPointInfoSpan.style.display = 'none';
+            //             }
+            //         } else {
+            //             // 开启选点模式
+            //             isPickingLocation = true;
+            //             startMapPickBtn.textContent = '✨ 选点模式中...';
+            //             startMapPickBtn.style.background = '#FF9800';
+                        
+            //             if (selectedPointInfoSpan) {
+            //                 selectedPointInfoSpan.innerHTML = '⏳ 请在地图上点击选择中心点';
+            //                 selectedPointInfoSpan.style.display = 'block';
+            //                 selectedPointInfoSpan.style.color = '#FF9800';
+            //             }
+            //         }
+            //     });
+            // }
+
+            // // 3. 地图点击事件（配合选点模式）
+            // map.addEventListener('click', function(e) {
+            //     if (isPickingLocation) {
+            //         // 记录选中的点
+            //         currentSearchCenter = e.point;
+            //         var lng = e.point.lng.toFixed(6);
+            //         var lat = e.point.lat.toFixed(6);
+                    
+            //         // 显示提示信息
+            //         if (selectedPointInfoSpan) {
+            //             selectedPointInfoSpan.innerHTML = '📍 已选点: ' + lng + ', ' + lat;
+            //             selectedPointInfoSpan.style.display = 'block';
+            //             selectedPointInfoSpan.style.color = '#4CAF50';
+            //         }
+                    
+            //         // 清除之前的临时标记
+            //         if (currentPickedMarker) {
+            //             map.removeOverlay(currentPickedMarker);
+            //         }
+                    
+            //         // 添加新的临时标记（不自动消失）
+            //         currentPickedMarker = new BMap.Marker(e.point);
+            //         map.addOverlay(currentPickedMarker);
+                    
+            //         // 注意：不关闭选点模式，标记和提示一直保留
+            //     }
+            // });
+
+            // ========== 中心点选择逻辑 ==========
+            var searchCenterSpot = document.getElementById('searchCenterSpot');
+            var startMapPickBtn = document.getElementById('startMapPickBtn');
+            var selectedPointInfoSpan = document.getElementById('selectedPointInfo');
+
+            // 1. 从景点选择
+            if (searchCenterSpot) {
+                searchCenterSpot.addEventListener('change', function() {
+                    if (this.value) {
+                        // 清空地图选点的坐标和标记
+                        currentSearchCenter = null;
+                        if (currentPickedMarker) {
+                            map.removeOverlay(currentPickedMarker);
+                            currentPickedMarker = null;
+                        }
+                        // 如果处于选点模式，退出
+                        if (isPickingLocation) {
+                            isPickingLocation = false;
+                            if (startMapPickBtn) {
+                                startMapPickBtn.textContent = '📍 地图选点';
+                                startMapPickBtn.style.background = '#2196F3';
+                            }
+                        }
+                        // 清除选点提示
+                        if (selectedPointInfoSpan) {
+                            selectedPointInfoSpan.innerHTML = '';
+                            selectedPointInfoSpan.style.display = 'none';
+                        }
+                        // 更新地图视野到所选景点
+                        var selectedIdx = parseInt(this.value);
+                        var spot = markersData[selectedIdx];
+                        if (spot) {
+                            map.centerAndZoom(new BMap.Point(spot.lng, spot.lat), 14);
+                        }
+                    }
+                });
+                // 初始加载景点列表
+                if (typeof updateSearchCenterSpotSelect === 'function') {
+                    updateSearchCenterSpotSelect();
+                }
+            }
+
+            // 2. 地图选点按钮
+            if (startMapPickBtn) {
+                startMapPickBtn.addEventListener('click', function() {
+                    if (isPickingLocation) {
+                        // 关闭选点模式，清除标记和提示
+                        isPickingLocation = false;
+                        startMapPickBtn.textContent = '📍 地图选点';
+                        startMapPickBtn.style.background = '#2196F3';
+                        
+                        // 清除临时标记
+                        if (currentPickedMarker) {
+                            map.removeOverlay(currentPickedMarker);
+                            currentPickedMarker = null;
+                        }
+                        
+                        // 清除提示信息
+                        if (selectedPointInfoSpan) {
+                            selectedPointInfoSpan.innerHTML = '';
+                            selectedPointInfoSpan.style.display = 'none';
+                        }
+                    } else {
+                        // 开启选点模式
+                        isPickingLocation = true;
+                        startMapPickBtn.textContent = '✨ 选点模式中...';
+                        startMapPickBtn.style.background = '#FF9800';
+                        
+                        // 清空景点下拉框的选择
+                        if (searchCenterSpot) {
+                            searchCenterSpot.value = '';
+                        }
+                        
+                        // 清空之前的中心点（等待新选点）
+                        currentSearchCenter = null;
+                        
+                        if (selectedPointInfoSpan) {
+                            selectedPointInfoSpan.innerHTML = '⏳ 请在地图上点击选择中心点';
+                            selectedPointInfoSpan.style.display = 'block';
+                            selectedPointInfoSpan.style.color = '#FF9800';
+                        }
+                    }
+                });
+            }
+
+            // 3. 地图点击事件（配合选点模式）
+            map.addEventListener('click', function(e) {
+                if (isPickingLocation) {
+                    // 记录选中的点
+                    currentSearchCenter = e.point;
+                    var lng = e.point.lng.toFixed(6);
+                    var lat = e.point.lat.toFixed(6);
+                    
+                    // 显示提示信息
+                    if (selectedPointInfoSpan) {
+                        selectedPointInfoSpan.innerHTML = '📍 已选点: ' + lng + ', ' + lat;
+                        selectedPointInfoSpan.style.display = 'block';
+                        selectedPointInfoSpan.style.color = '#4CAF50';
+                    }
+                    
+                    // 清除之前的临时标记
+                    if (currentPickedMarker) {
+                        map.removeOverlay(currentPickedMarker);
+                    }
+                    
+                    // 添加新的临时标记（不自动消失）
+                    currentPickedMarker = new BMap.Marker(e.point);
+                    map.addOverlay(currentPickedMarker);
+                    
+                    // 注意：不关闭选点模式，标记和提示一直保留
+                }
+            });
+            // ========================================
+
+            refreshSpotList();
+            updateOptimizePanel();
+            addAllMarkers();
+            setMapView();
+        
+        }
+
+        // 检查API密钥
+        if (BAIDU_API_KEY === '你的AK') {
+            document.getElementById('map').innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:12px;z-index:2000;"><h3>⚠️ 请先配置百度地图API密钥</h3><p>将代码顶部 <code>BAIDU_API_KEY</code> 改为你自己的AK</p></div>';
+        } else {
+            var script = document.createElement('script');
+            script.src = `https://api.map.baidu.com/api?v=3.0&ak=${BAIDU_API_KEY}&callback=initMap`;
+            document.head.appendChild(script);
+        }
+    </script>
+</body>
+</html>
