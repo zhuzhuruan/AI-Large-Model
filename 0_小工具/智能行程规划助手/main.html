@@ -1,3 +1,18 @@
+<script>
+    // 检查是否已配置AK
+    var browserAk = localStorage.getItem('baidu_browser_ak');
+    var serverAk = localStorage.getItem('baidu_server_ak');
+    
+    if (!browserAk || !serverAk) {
+        // 没有配置，跳转到配置页
+        window.location.href = 'index.html';
+    }
+    
+    // 设置全局AK变量
+    var BAIDU_API_KEY = browserAk;
+    var BAIDU_SERVER_AK = serverAk;
+</script>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -678,9 +693,9 @@
     <script>
         // ==================== 请替换成你的百度地图 AK ====================
         // 浏览器端 AK（用于地图显示）- 保持不变
-        var BAIDU_API_KEY = 'FYugigEWwXbDwzhQn4gVYlz00FXQRsNc';   // ⬅️ 这里改成你自己的
+        // var BAIDU_API_KEY = 'FYugigEWwXbDwzhQn4gVYlz00FXQRsNc';   // ⬅️ 这里改成你自己的
         // 服务端 AK（用于获取路线数据）- 需要你单独申请
-        var BAIDU_SERVER_AK = 'X5WPPIRe8wRkLTGMJNntbuv7TPgNgjgo';
+        // var BAIDU_SERVER_AK = 'X5WPPIRe8wRkLTGMJNntbuv7TPgNgjgo';
         // ================================================================
 
         var map;

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>智能行程规划助手 - 配置AK</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 450px;
+            max-width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #2196F3;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+        input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+        .tip {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        .tip a {
+            color: #2196F3;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #0b7dda;
+        }
+        .help {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #666;
+        }
+        .help ol {
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+        .help li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ 智能行程规划助手</h1>
+        <div class="subtitle">首次使用请配置百度地图API密钥</div>
+        
+        <div class="input-group">
+            <label>🔑 浏览器端 AK</label>
+            <input type="text" id="browserAk" placeholder="请输入你的浏览器端AK" autocomplete="off">
+            <div class="tip">用于地图显示和搜索，申请地址：<a href="http://lbsyun.baidu.com/apiconsole/key" target="_blank">百度地图开放平台</a></div>
+        </div>
+        
+        <div class="input-group">
+            <label>🔐 服务端 AK</label>
+            <input type="text" id="serverAk" placeholder="请输入你的服务端AK" autocomplete="off">
+            <div class="tip">用于公交路线规划，需开启「路线规划API」服务</div>
+        </div>
+        
+        <button onclick="saveAndEnter()">🚀 进入智能行程规划助手</button>
+        
+        <div class="help">
+            📌 如何获取AK？
+            <ol>
+                <li>访问 <a href="http://lbsyun.baidu.com/apiconsole/key" target="_blank">百度地图开放平台</a> → 创建应用</li>
+                <li>应用类型选择「浏览器端」，Referer白名单填写 <code>*</code> 或你的域名</li>
+                <li>再创建一个「服务端」应用，开启路线规划API</li>
+                <li>将两个AK分别填入上方输入框</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function saveAndEnter() {
+            var browserAk = document.getElementById('browserAk').value.trim();
+            var serverAk = document.getElementById('serverAk').value.trim();
+            
+            if (!browserAk) {
+                alert('请输入浏览器端 AK');
+                return;
+            }
+            if (!serverAk) {
+                alert('请输入服务端 AK');
+                return;
+            }
+            
+            // 保存到 localStorage
+            localStorage.setItem('baidu_browser_ak', browserAk);
+            localStorage.setItem('baidu_server_ak', serverAk);
+            
+            // 跳转到主页面
+            window.location.href = 'main.html';
+        }
+        
+        // 如果已经保存过，可以直接进入
+        if (localStorage.getItem('baidu_browser_ak') && localStorage.getItem('baidu_server_ak')) {
+            var btn = document.createElement('button');
+            btn.innerHTML = '已有配置，直接进入 →';
+            btn.style.marginTop = '10px';
+            btn.style.background = '#4CAF50';
+            btn.onclick = function() {
+                window.location.href = 'main.html';
+            };
+            document.querySelector('.container').appendChild(btn);
+        }
+    </script>
+</body>
+</html>
