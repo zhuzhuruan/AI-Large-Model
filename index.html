@@ -3,6 +3,16 @@
 <head>
     <meta charset="utf-8">
     <title>智能行程规划助手 - 配置AK</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="行程规划">
+    <meta name="theme-color" content="#2196F3">
+
+
     <style>
         * {
             margin: 0;
@@ -96,6 +106,39 @@
         .help li {
             margin: 5px 0;
         }
+
+        /* ========== 手机端适配 ========== */
+        @media (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 20px;
+        margin: 10px auto;
+    }
+    
+    button {
+        min-height: 44px;
+    }
+    
+    input {
+        min-height: 40px;
+        font-size: 14px;
+    }
+    
+    .step-text {
+        font-size: 12px;
+    }
+}
+
+        /* ========== 触摸优化（可选） ========== */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button:active {
+            transform: scale(0.97);
+            transition: 0.05s;
+        }
+
     </style>
 </head>
 <body>
