@@ -1058,6 +1058,17 @@
         // 服务端 AK（用于获取路线数据）- 需要你单独申请
         // var BAIDU_SERVER_AK = 'X5WPPIRe8wRkLTGMJNntbuv7TPgNgjgo';
         // ================================================================
+        // ========== 版本自动更新检测 ==========
+        (function() {
+            var APP_VERSION = '20260421.01';
+            var savedVersion = localStorage.getItem('travel_app_version');
+            if (savedVersion !== APP_VERSION) {
+                localStorage.setItem('travel_app_version', APP_VERSION);
+                window.location.reload(true);
+            }
+        })();
+        // ====================================
+
 
         var map;
         var markersData = [];
