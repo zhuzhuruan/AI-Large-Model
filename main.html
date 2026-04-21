@@ -520,187 +520,287 @@
         }
 
         /* ========== 手机端样式 ========== */
+        /* ========== 手机端基础布局 ========== */
+        /* ========== 手机端样式 ========== */
         @media (max-width: 768px) {
-            /* 隐藏 PC 端侧边栏 */
+            /* 侧边栏 */
             .sidebar {
-                display: none;
-            }
-            
-            /* 手机端主容器 */
-            .mobile-container {
-                display: flex;
-                flex-direction: column;
-                height: 100vh;
-                background: #f5f5f5;
-            }
-            
-            /* 头部 */
-            .mobile-header {
-                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-                color: white;
-                padding: 15px;
-                text-align: center;
-                font-size: 18px;
-                font-weight: bold;
-                position: relative;
-            }
-            
-            .mobile-header .back-btn {
-                position: absolute;
-                left: 15px;
-                top: 50%;
-                transform: translateY(-50%);
-                background: none;
-                border: none;
-                color: white;
-                font-size: 20px;
-                cursor: pointer;
-                display: none;
-            }
-            
-            /* 内容区域（功能面板） */
-            .mobile-content {
-                flex: 1;
-                overflow-y: auto;
-                padding: 15px;
-                background: white;
-                transition: all 0.3s ease;
-            }
-            
-            /* 地图容器 */
-            .mobile-map-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
                 height: 50%;
-                transition: all 0.3s ease;
-                position: relative;
+                overflow-y: auto;
+                z-index: 100;
+                background: #f8f9fa;
+                border-radius: 0;
+                box-shadow: none;
+                padding-top: 48px;  /* 新增：为标题栏留出空间 */
             }
             
-            /* 地图全屏模式 */
-            .mobile-map-container.fullscreen {
-                height: 100%;
-            }
-            
-            /* 功能面板全屏模式 */
-            .mobile-content.fullscreen {
-                flex: 1;
-                height: 100%;
-            }
-            
-            /* 功能面板隐藏 */
-            .mobile-content.hidden {
+            /* 隐藏侧边栏中原有的模块标题（避免重复） */
+            .sidebar .module-title {
                 display: none;
             }
             
-            /* 地图隐藏 */
-            .mobile-map-container.hidden {
+            /* 地图 */
+            #map {
+                position: fixed;
+                top: 50%;
+                left: 0;
+                width: 100%;
+                height: 50%;
+                z-index: 1;
+            }
+            
+            /* 隐藏 PC 端头部 */
+            .header {
                 display: none;
             }
+            
+            /* 手机端头部 */
+            .mobile-header-bar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 44px;  /* 减小高度 */
+                background: rgba(255,255,255,0.96);
+                backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                font-size: 16px;
+                font-weight: 600;
+                display: none;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            }
+
             
             /* 底部导航栏 */
-            .bottom-nav {
-                display: flex;
-                background: white;
-                border-top: 1px solid #eee;
-                padding: 8px 0;
+            .mobile-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background: rgba(255,255,255,0.96);
+                backdrop-filter: blur(10px);
+                display: flex !important;
+                z-index: 200;
+                height: 54px;
                 box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
             }
             
-            .nav-item {
+            .mobile-nav .nav-btn {
                 flex: 1;
+                background: none;
+                border: none;
+                font-size: 12px;
+                cursor: pointer;
+                color: #8e8e93;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                background: none;
-                border: none;
-                cursor: pointer;
-                padding: 8px 0;
-                color: #666;
+                gap: 4px;
                 transition: all 0.2s;
             }
             
-            .nav-item.active {
-                color: #2196F3;
-            }
-            
-            .nav-icon {
+            .mobile-nav .nav-btn::before {
+                content: attr(data-icon);
                 font-size: 22px;
-                margin-bottom: 2px;
             }
             
-            .nav-label {
-                font-size: 10px;
+            .mobile-nav .nav-btn.active {
+                color: #007AFF;
             }
             
-            /* 布局控制按钮 */
-            .layout-controls {
-                position: absolute;
-                right: 15px;
-                top: 50%;
-                transform: translateY(-50%);
+            /* 布局切换按钮 */
+            .layout-switch {
+                position: fixed;
+                bottom: 70px;
+                right: 12px;
+                z-index: 300;
                 display: flex;
                 gap: 8px;
+                background: rgba(0,0,0,0.7);
+                backdrop-filter: blur(8px);
+                padding: 6px 12px;
+                border-radius: 30px;
             }
             
-            .layout-btn {
-                background: rgba(255,255,255,0.2);
+            .layout-btn-small {
+                background: none;
                 border: none;
                 color: white;
-                padding: 5px 10px;
-                border-radius: 20px;
                 font-size: 12px;
-                cursor: pointer;
-            }
-            
-            /* 首页卡片样式 */
-            .home-card {
-                background: white;
-                border-radius: 12px;
-                padding: 20px;
-                margin-bottom: 15px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                padding: 4px 10px;
+                border-radius: 20px;
                 cursor: pointer;
                 transition: all 0.2s;
             }
             
-            .home-card:active {
-                transform: scale(0.98);
+            .layout-btn-small.active {
+                background: #007AFF;
             }
             
-            .home-card-icon {
-                font-size: 32px;
-                margin-bottom: 10px;
+            /* 布局模式 */
+            .sidebar.fullscreen-map {
+                display: none !important;
             }
             
-            .home-card-title {
-                font-size: 16px;
-                font-weight: bold;
-                margin-bottom: 5px;
+            #map.fullscreen-map {
+                top: 0 !important;
+                height: 100% !important;
             }
             
-            .home-card-desc {
-                font-size: 12px;
-                color: #999;
+            .sidebar.fullscreen-func {
+                height: 100% !important;
             }
             
-            /* 统计卡片 */
-            .stats-card {
-                background: linear-gradient(135deg, #2196F3, #0b7dda);
-                color: white;
-                border-radius: 12px;
-                padding: 15px;
-                margin-bottom: 15px;
-                text-align: center;
-            }
-            
-            .stats-number {
-                font-size: 24px;
-                font-weight: bold;
+            #map.fullscreen-func {
+                display: none !important;
             }
         }
+
+        /* ========== 首页样式（独立，不在媒体查询内） ========== */
+/* ========== 首页样式 ========== */
+.home-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    overflow-y: auto;
+    display: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 背景水印 */
+.home-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-repeat: repeat;
+    background-size: 80px 80px;
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+/* 主容器 */
+.home-container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+    padding: 40px 24px 40px;
+    box-sizing: border-box;
+}
+
+/* 顶部区域 */
+.home-top {
+    text-align: center;
+}
+
+.home-logo {
+    font-size: 56px;
+    margin-bottom: 12px;
+}
+
+.home-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.home-slogan {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    line-height: 3;
+    margin-bottom: 0;
+}
+
+/* 网格区域 */
+.home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    width: 100%;
+    max-width: 280px;
+    margin: 10px auto 0;
+}
+
+.home-grid-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 18px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+}
+
+.home-grid-card:active {
+    transform: scale(0.96);
+    background: white;
+}
+
+.grid-icon {
+    font-size: 34px;
+    margin-bottom: 10px;
+}
+
+.grid-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.grid-desc {
+    font-size: 11px;
+    color: #999;
+}
+
+/* 按钮区域 */
+.home-start {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.home-start-btn {
+    background: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 0;
+    color: #667eea;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    width: 70%;
+    max-width: 220px;
+    display: block;
+    margin: 0 auto;
+}
+
+.home-start-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
         /* ========== 手机端样式 ========== */
 
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1>🗺️ 智能<span>行程规划助手</span></h1>
@@ -708,6 +808,7 @@
     </div>
     <div class="sidebar">
         <div class="sidebar-content">
+
             <!-- 搜索添加景点模块 -->
             <div class="module">
                 <div class="module-title">
@@ -881,6 +982,75 @@
     </div>
     <div id="map"></div>
 
+    <!-- ========== 手机端代码放在这里 ========== -->
+    <!-- 2.1 添加首页 -->
+    <div id="homePage" class="home-page">
+        <div class="home-bg" style="background-image: url('icon-512.png');"></div>
+        
+        <div class="home-container">
+            <!-- 顶部 -->
+            <div class="home-top">
+                <div class="home-logo">🗺️</div>
+                <div class="home-title">行程规划助手</div>
+                <div class="home-slogan">
+                    规划你的旅行<br>
+                    探索未知风景<br>
+                    发现美好事物<br>
+                    记录精彩瞬间<br>
+                    让每次出发都与众不同
+                </div>
+            </div>
+            
+            <!-- 功能网格 -->
+            <div class="home-grid">
+                <div class="home-grid-card" data-page="spots">
+                    <div class="grid-icon">📍</div>
+                    <div class="grid-title">添加景点</div>
+                    <div class="grid-desc">搜索并添加</div>
+                </div>
+                <div class="home-grid-card" data-page="route">
+                    <div class="grid-icon">🚗</div>
+                    <div class="grid-title">路线规划</div>
+                    <div class="grid-desc">智能推荐路线</div>
+                </div>
+                <div class="home-grid-card" data-page="optimize">
+                    <div class="grid-icon">🎯</div>
+                    <div class="grid-title">优化行程</div>
+                    <div class="grid-desc">智能排序</div>
+                </div>
+                <div class="home-grid-card" data-page="search">
+                    <div class="grid-icon">🔍</div>
+                    <div class="grid-title">周边搜索</div>
+                    <div class="grid-desc">发现好店</div>
+                </div>
+            </div>
+            
+            <!-- 开始按钮 -->
+            <button class="home-start-btn" id="startBtn">开始使用</button>
+        </div>
+    </div>
+
+    <!-- 2.2 底部导航栏（仅手机端显示） -->
+    <div class="mobile-nav" style="display: none;">
+        <button class="nav-btn" data-module="0" data-icon="📍">景点</button>
+        <button class="nav-btn" data-module="2" data-icon="🚗">路线</button>
+        <button class="nav-btn" data-module="3" data-icon="🎯">优化</button>
+        <button class="nav-btn" data-module="4" data-icon="🔍">周边</button>
+    </div>
+
+    <!-- 4.2 底部导航栏（仅手机端显示） -->
+    <div class="layout-switch" style="display: none;">
+    <button class="layout-btn-small" data-layout="func">功能</button>
+    <button class="layout-btn-small" data-layout="map">地图</button>
+    <button class="layout-btn-small" data-layout="half">半屏</button>
+    </div>
+
+    <div class="mobile-header-bar" id="mobileHeaderBar">
+    <span id="mobileHeaderTitle">添加景点</span>
+    </div>
+
+    <!-- =================================== -->
+
     <script>
         // ==================== 请替换成你的百度地图 AK ====================
         // 浏览器端 AK（用于地图显示）- 保持不变
@@ -998,55 +1168,6 @@
                 drive.search(p1, p2);
             });
         }
-
-        // 绘制带距离标签的直线连线（增量添加）
-        // function drawDistanceLine(lat1, lng1, lat2, lng2, distanceKm) {
-        //     if (!distanceKm) {
-        //         distanceKm = getStraightDistance(lat1, lng1, lat2, lng2);
-        //     }
-            
-        //     var p1 = new BMap.Point(lng1, lat1);
-        //     var p2 = new BMap.Point(lng2, lat2);
-            
-        //     // 使用不同颜色区分不同连线（可选）
-        //     var colors = ['#FF6600', '#2196F3', '#4CAF50', '#9C27B0', '#FF9800'];
-        //     var colorIndex = window.lineCount || 0;
-        //     var lineColor = colors[colorIndex % colors.length];
-        //     window.lineCount = (window.lineCount || 0) + 1;
-            
-        //     var line = new BMap.Polyline([p1, p2], {
-        //         strokeColor: lineColor,
-        //         strokeWeight: 3,
-        //         strokeOpacity: 0.8
-        //     });
-        //     map.addOverlay(line);
-            
-        //     var midLng = (lng1 + lng2) / 2;
-        //     var midLat = (lat1 + lat2) / 2;
-        //     var midPoint = new BMap.Point(midLng, midLat);
-            
-        //     var distanceText = distanceKm.toFixed(1) + ' km';
-        //     var label = new BMap.Label(distanceText, {
-        //         position: midPoint,
-        //         offset: new BMap.Size(-20, -10)
-        //     });
-        //     label.setStyle({
-        //         backgroundColor: lineColor,
-        //         color: 'white',
-        //         fontSize: '12px',
-        //         padding: '2px 6px',
-        //         borderRadius: '12px',
-        //         border: 'none',
-        //         fontWeight: 'bold',
-        //         boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
-        //     });
-        //     map.addOverlay(label);
-            
-        //     if (!window.distanceLabels) window.distanceLabels = [];
-        //     if (!window.distanceLines) window.distanceLines = [];
-        //     window.distanceLabels.push(label);
-        //     window.distanceLines.push(line);
-        // }
 
         // 清除所有路线和标签（增强版）
         function clearRoutes() {
@@ -2456,22 +2577,7 @@
         }
 
         // <!---------------------------------------- 周边搜索模块 ---------------------------------------->
-        // 更新中心点下拉框（当景点变化时）
-        // function updateSearchCenterSelect() {
-        //     var select = document.getElementById('searchCenter');
-        //     if (!select) return;
-            
-        //     // 保留第一个选项
-        //     var html = '<option value="map">📍 点击地图选点</option>';
-            
-        //     // 添加已添加的景点作为中心点选项
-        //     markersData.forEach(function(spot, idx) {
-        //         html += '<option value="spot_' + idx + '">📍 ' + spot.name + '</option>';
-        //     });
-            
-        //     select.innerHTML = html;
-        // }
-
+        // 更新中心点下拉模块
         function updateSearchCenterSpotSelect() {
             var select = document.getElementById('searchCenterSpot');
             if (!select) return;
@@ -2718,7 +2824,6 @@
             // 渲染第一页
             renderSearchResultsPage(keyword);
         }
-
 
         function renderSearchResultsPage(keyword) {
             var results = currentSearchResults;
@@ -3147,7 +3252,6 @@
             updateSearchCenterSpotSelect();   // 更新中心点选项
 
         }   
-
 
         // 删除指定景点
         window.removeSpot = function(index) {
@@ -3678,294 +3782,228 @@
             document.head.appendChild(script);
         }
 
+
         // ========== 手机端功能 ==========
-        var currentLayout = 'half'; // half, map, func
-        var currentPage = 'home';
 
-        // 初始化手机端
-        function initMobile() {
-            if (window.innerWidth > 768) return;
-            
-            // 显示手机端容器，隐藏 PC 端侧边栏
-            document.getElementById('mobileApp').style.display = 'flex';
-            document.querySelector('.sidebar').style.display = 'none';
-            
-            // 将 PC 端模块内容复制到手机端
-            copyModulesToMobile();
-            
-            // 绑定事件
-            bindMobileEvents();
-            
-            // 更新首页景点数量
-            updateHomeStats();
-            
-            // 显示首页
-            showMobilePage('home');
-        }
 
-        // 复制 PC 端模块到手机端
-        function copyModulesToMobile() {
-            var pcModules = document.querySelectorAll('.sidebar .module');
-            
-            // 景点模块（第0、1个）
-            var spotsHtml = '';
-            for (var i = 0; i <= 1 && i < pcModules.length; i++) {
-                spotsHtml += pcModules[i].outerHTML;
-            }
-            document.getElementById('spotsPage').innerHTML = spotsHtml;
-            
-            // 路线模块（第2个）
-            if (pcModules[2]) {
-                document.getElementById('routePage').innerHTML = pcModules[2].outerHTML;
-            }
-            
-            // 优化模块（第3个）
-            if (pcModules[3]) {
-                document.getElementById('optimizePage').innerHTML = pcModules[3].outerHTML;
-            }
-            
-            // 周边模块（第4个）
-            if (pcModules[4]) {
-                document.getElementById('searchPage').innerHTML = pcModules[4].outerHTML;
-            }
-        }
-
-        // 显示指定页面
-        function showMobilePage(pageId) {
-            currentPage = pageId;
-            
-            // 隐藏所有页面
-            document.getElementById('homePage').style.display = 'none';
-            document.getElementById('spotsPage').style.display = 'none';
-            document.getElementById('routePage').style.display = 'none';
-            document.getElementById('searchPage').style.display = 'none';
-            document.getElementById('optimizePage').style.display = 'none';
-            
-            // 显示选中页面
-            if (pageId === 'home') {
-                document.getElementById('homePage').style.display = 'block';
-                document.getElementById('mobileTitle').innerText = '首页';
-                document.querySelector('.back-btn').style.display = 'none';
-                updateHomeStats();
-            } else {
-                var pageMap = {
-                    'spots': 'spotsPage',
-                    'route': 'routePage',
-                    'search': 'searchPage',
-                    'optimize': 'optimizePage'
-                };
-                document.getElementById(pageMap[pageId]).style.display = 'block';
-                document.getElementById('mobileTitle').innerText = getPageTitle(pageId);
-                document.querySelector('.back-btn').style.display = 'block';
-            }
-            
-            // 更新底部导航样式
-            var navItems = document.querySelectorAll('.bottom-nav .nav-item');
-            navItems.forEach(function(item) {
-                if (item.getAttribute('data-page') === pageId) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-        }
-
-        // 获取页面标题
-        function getPageTitle(pageId) {
-            var titles = {
-                'spots': '添加景点',
-                'route': '路线规划',
-                'search': '周边搜索',
-                'optimize': '优化行程'
-            };
-            return titles[pageId] || '行程规划';
-        }
-
-        // 切换布局
-        function setLayout(layout) {
-            currentLayout = layout;
-            var contentDiv = document.getElementById('mobileContent');
-            var mapContainer = document.getElementById('mobileMapContainer');
-            
-            // 重置样式
-            contentDiv.classList.remove('fullscreen', 'hidden');
-            mapContainer.classList.remove('fullscreen', 'hidden');
-            
-            switch(layout) {
-                case 'half':
-                    contentDiv.style.flex = '1';
-                    mapContainer.style.height = '50%';
-                    break;
-                case 'map':
-                    mapContainer.classList.add('fullscreen');
-                    contentDiv.classList.add('hidden');
-                    break;
-                case 'func':
-                    contentDiv.classList.add('fullscreen');
-                    mapContainer.classList.add('hidden');
-                    break;
-            }
-            
-            // 触发地图 resize
-            setTimeout(function() {
-                if (map && typeof map.resize === 'function') {
-                    map.resize();
-                    map.centerAndZoom(map.getCenter(), map.getZoom());
-                }
-            }, 100);
-        }
-
-        // 更新首页统计
-        function updateHomeStats() {
-            var spotCount = document.getElementById('homeSpotCount');
-            if (spotCount) {
-                spotCount.innerText = markersData.length;
-            }
-        }
-
-        // 绑定手机端事件
-        function bindMobileEvents() {
-            // 底部导航点击
-            var navItems = document.querySelectorAll('.bottom-nav .nav-item');
-            navItems.forEach(function(item) {
-                item.addEventListener('click', function() {
-                    var pageId = this.getAttribute('data-page');
-                    showMobilePage(pageId);
-                });
-            });
-            
-            // 首页卡片点击
-            var homeCards = document.querySelectorAll('.home-card');
-            homeCards.forEach(function(card) {
-                card.addEventListener('click', function() {
-                    var pageId = this.getAttribute('data-page');
-                    showMobilePage(pageId);
-                });
-            });
-            
-            // 返回按钮
-            var backBtn = document.getElementById('mobileBackBtn');
-            backBtn.addEventListener('click', function() {
-                showMobilePage('home');
-            });
-            
-            // 布局切换按钮
-            document.getElementById('layoutHalfBtn').addEventListener('click', function() { setLayout('half'); });
-            document.getElementById('layoutMapBtn').addEventListener('click', function() { setLayout('map'); });
-            document.getElementById('layoutFuncBtn').addEventListener('click', function() { setLayout('func'); });
-            
-            // 监听景点数量变化
-            var observer = new MutationObserver(function() {
-                updateHomeStats();
-            });
-            observer.observe(document.getElementById('spotListContainer') || document.body, {
-                childList: true,
-                subtree: true
-            });
-        }
-
-        // 在页面加载时初始化
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initMobile);
-        } else {
-            initMobile();
-        }
         // ========== 手机端功能 ==========
 
     </script>
 
-    <!-- 手机端容器（仅手机端显示） -->
-    <div id="mobileApp" class="mobile-container" style="display: none;">
-        <!-- 头部 -->
-        <div class="mobile-header">
-            <button class="back-btn" id="mobileBackBtn">←</button>
-            <span id="mobileTitle">首页</span>
-            <div class="layout-controls">
-                <button class="layout-btn" id="layoutHalfBtn" style="background: rgba(255,255,255,0.3);">半屏</button>
-                <button class="layout-btn" id="layoutMapBtn">地图</button>
-                <button class="layout-btn" id="layoutFuncBtn">功能</button>
-            </div>
-        </div>
-        
-        <!-- 功能内容区域 -->
-        <div id="mobileContent" class="mobile-content">
-            <!-- 首页内容（默认显示） -->
-            <div id="homePage">
-                <div class="stats-card">
-                    <div class="stats-number" id="homeSpotCount">0</div>
-                    <div>已添加景点</div>
-                </div>
-                
-                <div class="home-card" data-page="spots">
-                    <div class="home-card-icon">📍</div>
-                    <div class="home-card-title">添加景点</div>
-                    <div class="home-card-desc">搜索并添加景点到列表</div>
-                </div>
-                
-                <div class="home-card" data-page="route">
-                    <div class="home-card-icon">🚗</div>
-                    <div class="home-card-title">路线规划</div>
-                    <div class="home-card-desc">规划出行路线</div>
-                </div>
-                
-                <div class="home-card" data-page="search">
-                    <div class="home-card-icon">🔍</div>
-                    <div class="home-card-title">周边搜索</div>
-                    <div class="home-card-desc">搜索周边酒店、美食</div>
-                </div>
-                
-                <div class="home-card" data-page="optimize">
-                    <div class="home-card-icon">🎯</div>
-                    <div class="home-card-title">优化行程</div>
-                    <div class="home-card-desc">智能排序游览顺序</div>
-                </div>
-            </div>
+    <!-- 2.3 手机端导航脚本（新增） -->
+    <script>
+        if (window.innerWidth <= 768) {
+            var homePage = document.getElementById('homePage');
+            var sidebar = document.querySelector('.sidebar');
+            var navBtns = document.querySelectorAll('.nav-btn');
+            var modules = document.querySelectorAll('.sidebar .module');
+            var homeCards = document.querySelectorAll('.home-card');
+            var resultModule = modules[modules.length - 1]; // 结果模块
             
-            <!-- 功能页面容器（动态填充） -->
-            <div id="spotsPage" style="display: none;">
-                <!-- 这里复制 PC 端景点模块的 HTML -->
-            </div>
-            <div id="routePage" style="display: none;">
-                <!-- 这里复制 PC 端路线规划模块的 HTML -->
-            </div>
-            <div id="searchPage" style="display: none;">
-                <!-- 这里复制 PC 端周边搜索模块的 HTML -->
-            </div>
-            <div id="optimizePage" style="display: none;">
-                <!-- 这里复制 PC 端优化行程模块的 HTML -->
-            </div>
-        </div>
-        
-        <!-- 地图容器 -->
-        <div id="mobileMapContainer" class="mobile-map-container">
-            <div id="map"></div>
-        </div>
-        
-        <!-- 底部导航栏 -->
-        <div class="bottom-nav">
-            <button class="nav-item" data-page="home">
-                <div class="nav-icon">🏠</div>
-                <div class="nav-label">首页</div>
-            </button>
-            <button class="nav-item" data-page="spots">
-                <div class="nav-icon">📍</div>
-                <div class="nav-label">景点</div>
-            </button>
-            <button class="nav-item" data-page="route">
-                <div class="nav-icon">🚗</div>
-                <div class="nav-label">路线</div>
-            </button>
-            <button class="nav-item" data-page="search">
-                <div class="nav-icon">🔍</div>
-                <div class="nav-label">周边</div>
-            </button>
-            <button class="nav-item" data-page="optimize">
-                <div class="nav-icon">🎯</div>
-                <div class="nav-label">优化</div>
-            </button>
-        </div>
-    </div>
-    <!-- 手机端容器（仅手机端显示） -->
+            // 显示首页，隐藏侧边栏
+            homePage.style.display = 'block';
+            sidebar.style.display = 'none';
+
+            // 保留的头部（全屏时显示）
+            function updateMobileHeader(title) {
+                var headerTitle = document.getElementById('mobileHeaderTitle');
+                if (headerTitle) headerTitle.innerText = title;
+                var headerBar = document.getElementById('mobileHeaderBar');
+                if (headerBar) headerBar.style.display = 'flex';
+            }
+
+            // 更新景点数量
+            function updateHomeCount() {
+                var countSpan = document.getElementById('homeSpotCount');
+                if (countSpan) countSpan.innerText = markersData.length;
+            }
+            updateHomeCount();
+            
+            // 监听景点数量变化
+            var observer = new MutationObserver(updateHomeCount);
+            var spotList = document.getElementById('spotListContainer');
+            if (spotList) observer.observe(spotList, { childList: true, subtree: true });
+            
+            // 隐藏所有模块（保留结果模块）
+            function hideAllModules() {
+                for (var i = 0; i < modules.length - 1; i++) {
+                    modules[i].style.display = 'none';
+                }
+            }
+            
+            // 显示指定模块
+            function showModule(index) {
+                hideAllModules();
+                if (modules[index]) modules[index].style.display = 'block';
+                if (resultModule) resultModule.style.display = 'block';
+                if (index === 0 && modules[1]) modules[1].style.display = 'block';
+                
+                // 根据 index 更新标题
+                var title = '';
+                if (index === 0) title = '添加景点';
+                else if (index === 2) title = '路线规划';
+                else if (index === 3) title = '优化行程';
+                else if (index === 4) title = '周边搜索';
+                updateMobileHeader(title);
+                
+                backHomeBtn.style.display = 'flex';
+            }
+            
+            // 首页卡片点击
+            homeCards.forEach(function(card) {
+                card.addEventListener('click', function() {
+                    var page = this.getAttribute('data-page');
+                    homePage.style.display = 'none';
+                    sidebar.style.display = 'block';
+                    
+                    if (page === 'spots') showModule(0);
+                    else if (page === 'route') showModule(2);
+                    else if (page === 'optimize') showModule(3);
+                    else if (page === 'search') showModule(4);
+                });
+            });
+
+            // 开始按钮点击
+            var startBtn = document.getElementById('startBtn');
+            if (startBtn) {
+                startBtn.addEventListener('click', function() {
+                    homePage.style.display = 'none';
+                    sidebar.style.display = 'block';
+                    showModule(0);  // 显示添加景点模块
+                    backHomeBtn.style.display = 'flex';
+                    updateMobileHeader('添加景点');
+                });
+            }   
+
+            // 网格卡片点击
+            var gridCards = document.querySelectorAll('.home-grid-card');
+            gridCards.forEach(function(card) {
+                card.addEventListener('click', function() {
+                    var page = this.getAttribute('data-page');
+                    homePage.style.display = 'none';
+                    sidebar.style.display = 'block';
+                    
+                    if (page === 'spots') showModule(0);
+                    else if (page === 'route') showModule(2);
+                    else if (page === 'optimize') showModule(3);
+                    else if (page === 'search') showModule(4);
+                    
+                    backHomeBtn.style.display = 'flex';
+                    updateMobileHeader(getPageTitle(page));
+                });
+            });
+
+            function getPageTitle(page) {
+                var titles = {
+                    'spots': '添加景点',
+                    'route': '路线规划',
+                    'optimize': '优化行程',
+                    'search': '周边搜索'
+                };
+                return titles[page] || '行程规划';
+            }
+
+            
+            // 底部导航点击
+            navBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var idx = parseInt(this.getAttribute('data-module'));
+                    homePage.style.display = 'none';
+                    sidebar.style.display = 'block';
+                    
+                    if (idx === 0) showModule(0);
+                    else if (idx === 2) showModule(2);
+                    else if (idx === 3) showModule(3);
+                    else if (idx === 4) showModule(4);
+                });
+            });
+            
+            // ========== 返回首页按钮（小箭头） ==========
+            var backHomeBtn = document.createElement('button');
+            backHomeBtn.innerHTML = '←';
+            backHomeBtn.style.cssText = 'position: fixed; top: 12px; left: 12px; width: 32px; height: 32px; background: transparent; color: #333; border: none; font-size: 24px; cursor: pointer; z-index: 1000; display: none;';
+            backHomeBtn.onclick = function() {
+                sidebar.style.display = 'none';
+                homePage.style.display = 'block';
+                updateHomeCount();
+                for (var i = 0; i < modules.length - 1; i++) {
+                    if (modules[i]) modules[i].style.display = '';
+                }
+                if (resultModule) resultModule.style.display = '';
+                backHomeBtn.style.display = 'none';
+
+                // 新增：隐藏标题栏
+                var headerBar = document.getElementById('mobileHeaderBar');
+                if (headerBar) headerBar.style.display = 'none';
+            };
+            document.body.appendChild(backHomeBtn);
+
+            // 布局切换
+            var layoutSwitch = document.querySelector('.layout-switch');
+            var layoutBtns = document.querySelectorAll('.layout-btn-small');
+            var sidebarLayout = document.querySelector('.sidebar');
+            var mapLayout = document.getElementById('map');
+
+            if (layoutSwitch) layoutSwitch.style.display = 'flex';
+
+            function setLayout(layout) {
+                sidebarLayout.classList.remove('fullscreen-map', 'fullscreen-func');
+                mapLayout.classList.remove('fullscreen-map', 'fullscreen-func');
+                
+                if (layout === 'half') {
+                    sidebarLayout.style.height = '50%';
+                    mapLayout.style.top = '50%';
+                    mapLayout.style.height = '50%';
+                    sidebarLayout.style.display = 'block';
+                    mapLayout.style.display = 'block';
+                } else if (layout === 'map') {
+                    sidebarLayout.classList.add('fullscreen-map');
+                    mapLayout.classList.add('fullscreen-map');
+                } else if (layout === 'func') {
+                    sidebarLayout.classList.add('fullscreen-func');
+                    mapLayout.classList.add('fullscreen-func');
+                }
+                
+                layoutBtns.forEach(function(btn) {
+                    btn.classList.toggle('active', btn.getAttribute('data-layout') === layout);
+                });
+                
+                // ========== 新增：重新调整地图视野 ==========
+                setTimeout(function() {
+                    if (typeof setMapView === 'function') {
+                        setMapView();
+                    } else if (map && typeof map.setViewport === 'function') {
+                        // 如果有景点标记，调整视野
+                        if (markersData && markersData.length > 0) {
+                            var bounds = new BMap.Bounds();
+                            markersData.forEach(function(p) {
+                                bounds.extend(new BMap.Point(p.lng, p.lat));
+                            });
+                            map.setViewport(bounds);
+                        } else {
+                            map.centerAndZoom(new BMap.Point(118.15, 29.78), 10);
+                        }
+                    }
+                    if (map && typeof map.resize === 'function') {
+                        map.resize();
+                    }
+                }, 150);
+
+
+            }
+
+            layoutBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    setLayout(this.getAttribute('data-layout'));
+                });
+            });
+
+            setLayout('func');
+        }
+    </script>
+    <!-- =================================== -->
 
 </body>
+
 </html>
+
