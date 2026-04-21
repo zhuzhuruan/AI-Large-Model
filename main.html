@@ -519,104 +519,194 @@
             margin-top: 5px;
         }
 
-        /* ========== PC端样式 ========== */
-        @media (min-width: 769px) {
-            #pcLayout {
-                display: block;
-                overflow-y: auto !important;
-                height: 100vh !important;
-            }
-            #mobileLayout {
-                display: none;
-            }
-            .bottom-nav {
-                display: none;
-            }
-        }
-
-        /* ========== 手机端完整样式 ========== */
+        /* ========== 手机端样式 ========== */
         @media (max-width: 768px) {
-            /* 强制手机端样式 */
-            #mobileLayout {
-                display: block !important;
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 60% !important;
-                background: white !important;
-                z-index: 9999 !important;
-                overflow: auto !important;
-            }
-            
-            #map {
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: 40% !important;
-                z-index: 1 !important;
-            }
-            
             /* 隐藏 PC 端侧边栏 */
-            #pcLayout {
-                display: none !important;
+            .sidebar {
+                display: none;
+            }
+            
+            /* 手机端主容器 */
+            .mobile-container {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                background: #f5f5f5;
+            }
+            
+            /* 头部 */
+            .mobile-header {
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+                color: white;
+                padding: 15px;
+                text-align: center;
+                font-size: 18px;
+                font-weight: bold;
+                position: relative;
+            }
+            
+            .mobile-header .back-btn {
+                position: absolute;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                display: none;
+            }
+            
+            /* 内容区域（功能面板） */
+            .mobile-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 15px;
+                background: white;
+                transition: all 0.3s ease;
+            }
+            
+            /* 地图容器 */
+            .mobile-map-container {
+                height: 50%;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+            
+            /* 地图全屏模式 */
+            .mobile-map-container.fullscreen {
+                height: 100%;
+            }
+            
+            /* 功能面板全屏模式 */
+            .mobile-content.fullscreen {
+                flex: 1;
+                height: 100%;
+            }
+            
+            /* 功能面板隐藏 */
+            .mobile-content.hidden {
+                display: none;
+            }
+            
+            /* 地图隐藏 */
+            .mobile-map-container.hidden {
+                display: none;
             }
             
             /* 底部导航栏 */
             .bottom-nav {
-                display: flex !important;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                height: 56px;
+                display: flex;
                 background: white;
                 border-top: 1px solid #eee;
-                z-index: 1000;
+                padding: 8px 0;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
             }
             
-            /* 页面容器 */
-            .page-container {
-                padding: 12px;
+            .nav-item {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 8px 0;
+                color: #666;
+                transition: all 0.2s;
+            }
+            
+            .nav-item.active {
+                color: #2196F3;
+            }
+            
+            .nav-icon {
+                font-size: 22px;
+                margin-bottom: 2px;
+            }
+            
+            .nav-label {
+                font-size: 10px;
+            }
+            
+            /* 布局控制按钮 */
+            .layout-controls {
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                display: flex;
+                gap: 8px;
+            }
+            
+            .layout-btn {
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 12px;
+                cursor: pointer;
+            }
+            
+            /* 首页卡片样式 */
+            .home-card {
                 background: white;
+                border-radius: 12px;
+                padding: 20px;
+                margin-bottom: 15px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                cursor: pointer;
+                transition: all 0.2s;
             }
             
-            /* 增大按钮 */
-            button {
-                min-height: 44px;
+            .home-card:active {
+                transform: scale(0.98);
+            }
+            
+            .home-card-icon {
+                font-size: 32px;
+                margin-bottom: 10px;
+            }
+            
+            .home-card-title {
+                font-size: 16px;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            
+            .home-card-desc {
+                font-size: 12px;
+                color: #999;
+            }
+            
+            /* 统计卡片 */
+            .stats-card {
+                background: linear-gradient(135deg, #2196F3, #0b7dda);
+                color: white;
+                border-radius: 12px;
+                padding: 15px;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+            
+            .stats-number {
+                font-size: 24px;
+                font-weight: bold;
             }
         }
-
-        /* ========== 触摸优化（可选） ========== */
-        * {
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        button:active {
-            transform: scale(0.97);
-            transition: 0.05s;
-        }
+        /* ========== 手机端样式 ========== */
 
     </style>
 </head>
 <body>
-    <!-- 顶部标题栏 -->
-    <div class="top-header">
-        <button class="back-btn" id="backBtn" style="display: none;">←</button>
-        <div class="title">
-            <span id="pageTitle">📍 景点</span>
-        </div>
-        <div style="width: 36px;"></div>
-    </div>
-
     <div class="header">
         <h1>🗺️ 智能<span>行程规划助手</span></h1>
         <div class="subtitle">景点搜索 · 距离计算 · 路线优化</div>
     </div>
-
-    <!-- ========== 电脑端展示 ========== -->
-    <div id="pcLayout" class="sidebar">
+    <div class="sidebar">
         <div class="sidebar-content">
             <!-- 搜索添加景点模块 -->
             <div class="module">
@@ -789,182 +879,7 @@
             </div>
         </div>
     </div>
-    <!-- ========== 手机端展示 ========== -->
     <div id="map"></div>
-
-    <div id="mobileLayout" style="display: none;">
-        <!-- ========== 景点管理页面 ========== -->
-        <div id="spotsPage" class="page-container" style="display: block;">
-            <!-- 搜索添加景点模块 -->
-            <div class="module">
-                <div class="module-title">
-                    <span class="icon">🔍</span>
-                    <span>搜索添加景点</span>
-                </div>
-                <div class="search-box">
-                    <input type="text" id="searchKeyword" placeholder="输入景点名称，如：天安门、故宫...">
-                    <button id="searchBtn">搜索</button>
-                </div>
-                <div id="searchResults" class="search-results">
-                    <div class="empty-tip">✨ 输入关键词，搜索景点并添加到列表</div>
-                </div>
-            </div>
-
-            <!-- 已添加景点模块 -->
-            <div class="module">
-                <div class="module-title" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <span class="icon">📋</span>
-                        <span>已添加景点 <span id="spotCount">(0)</span></span>
-                    </div>
-                    <button class="btn-info" id="toggleMapPickBtn" style="width: auto; padding: 4px 12px; margin: 0; font-size: 12px;">📍 地图选点</button>
-                </div>
-                <div id="pickStatus" style="display: none; background: #FF9800; color: white; padding: 6px; border-radius: 6px; font-size: 12px; text-align: center; margin-bottom: 8px;">
-                    🔍 地图选点模式已开启，点击地图任意位置添加景点
-                </div>
-                <div id="spotListContainer" class="spot-list">
-                    <div class="empty-tip">暂无景点，请搜索添加</div>
-                </div>
-                <div class="btn-group">
-                    <button class="btn-gray" id="clearAllSpotsBtn">🗑️ 清空所有</button>
-                    <button class="btn-gray" id="resetStorageBtn">🔄 重置存储</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 路线规划页面 ========== -->
-        <div id="routePage" class="page-container" style="display: none;">
-            <!-- 路线规划模块 -->
-            <div class="module">
-                <div class="module-title">
-                    <span class="icon">🚗</span>
-                    <span>路线规划</span>
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">起点</label>
-                    <select id="startPoint">
-                        <option value="">请选择起点</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">终点</label>
-                    <select id="endPoint">
-                        <option value="">请选择终点</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size: 13px; color: #555; margin-bottom: 4px; display: block;">出行方式</label>
-                    <select id="travelMode" style="width: 100%; padding: 8px 10px;">
-                        <option value="driving">🚗 驾车</option>
-                        <option value="transit">🚌 公交/地铁</option>
-                        <option value="walking">🚶 步行</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn-primary" id="calcDistanceBtn" style="width: 50%;">🚗 查看路线</button>
-                    <button class="btn-gray" id="clearLinesBtn" style="width: 50%;">🗑️ 清除路线</button>
-                </div>
-            </div>
-            
-            <!-- 结果显示模块 -->
-            <div class="module">
-                <div class="module-title">
-                    <span class="icon">📋</span>
-                    <span>路线概况</span>
-                </div>
-                <div id="distanceResult" class="tip" style="text-align: left;">
-                    <strong>💡 提示：</strong>请先添加景点，然后选择起点和终点；点击地图标记查看详情
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 优化行程页面 ========== -->
-        <div id="optimizePage" class="page-container" style="display: none;">
-            <div class="module">
-                <div class="module-title">
-                    <span class="icon">🎯</span>
-                    <span>优化行程</span>
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="font-size: 13px; color: #555;">起点：</label>
-                    <select id="optimizeStartPoint" style="width: 100%; padding: 6px;">
-                        <option value="">请选择起点</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 12px; color: #2196F3; font-weight: 500;">📌 勾选以下景点参与路线优化：</span>
-                    <label style="cursor: pointer; font-size: 11px; color: #666; display: flex; align-items: center; gap: 3px;">
-                        <input type="checkbox" id="selectAllCheckbox" style="margin: 0;"> 全选
-                    </label>
-                </div>
-                <div id="optimizeSpotList" style="max-height: 150px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; padding: 6px; margin-bottom: 10px;">
-                    <!-- 动态生成景点复选框 -->
-                </div>
-                <div class="btn-group">
-                    <button class="btn-info" id="calcAllBtn" style="flex: 1;">🎯 优化路线</button>
-                    <button class="btn-gray" id="clearOptimizeLine" style="flex: 1;">🗑️ 清除路线</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 周边搜索页面 ========== -->
-        <div id="searchPage" class="page-container" style="display: none;">
-            <div class="module">
-                <div class="module-title">
-                    <span class="icon">🔍</span>
-                    <span>周边搜索</span>
-                </div>
-                
-                <!-- 一级下拉框 -->
-                <div style="margin-bottom: 10px;">
-                    <label style="font-size: 13px; color: #555;">搜索类型：</label>
-                    <select id="searchMainType" style="width: 100%; padding: 8px; margin-top: 4px;">
-                        <option value="hotel">🏨 酒店</option>
-                        <option value="food">🍜 美食</option>
-                        <option value="attraction">🏞️ 景点</option>
-                    </select>
-                </div>
-                
-                <!-- 搜索半径 -->
-                <div style="margin-bottom: 10px;">
-                    <label style="font-size: 13px; color: #555;">搜索半径：</label>
-                    <select id="searchRadius" style="width: 100%; padding: 8px; margin-top: 4px;">
-                        <option value="500">500米</option>
-                        <option value="1000">1公里</option>
-                        <option value="3000">3公里</option>
-                        <option value="5000">5公里</option>
-                        <option value="10000">10公里</option>
-                    </select>
-                </div>
-                
-                <!-- 中心点选择 -->
-                <div style="margin-bottom: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 13px; color: #555;">中心点：</span>
-                        <button id="startMapPickBtn" style="padding: 4px 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">📍 地图选点</button>
-                    </div>
-                    <div id="selectedPointInfo" style="font-size: 11px; color: #4CAF50; margin-top: 6px; display: none;"></div>
-                    <select id="searchCenterSpot" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; margin-top: 8px;">
-                        <option value="">或从景点选择</option>
-                    </select>
-                </div>
-                
-                <!-- 操作按钮 -->
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn-primary" id="searchNearbyBtn" style="flex: 1;">🔍 开始搜索</button>
-                    <button class="btn-gray" id="clearSearchResultsBtn" style="flex: 1;">🗑️ 清除结果</button>
-                </div>
-            </div>
-            
-            <!-- 右侧二级菜单浮层 -->
-            <div id="subTypeMenu" style="position: fixed; left: 300px; top: 300px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 2000; min-width: 150px; display: none; overflow: hidden;">
-                <div style="background: #f5f5f5; padding: 8px 12px; font-weight: 600; font-size: 12px; border-bottom: 1px solid #eee;" id="subMenuTitle">酒店分类</div>
-                <div id="subMenuItems" style="padding: 8px 0;">
-                    <!-- 动态生成 -->
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script>
         // ==================== 请替换成你的百度地图 AK ====================
@@ -1515,11 +1430,6 @@
                     document.getElementById('distanceResult').innerHTML = html;
                     drawDrivingFullRoute();
 
-                    // 手机端：进入地图全屏模式
-                    if (window.innerWidth <= 768) {
-                        enterMapFullscreen();
-                    }
-
                 } else {
                     document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">驾车路线规划失败</span>';
                 }
@@ -1766,13 +1676,10 @@
                     // html += '</div></details>';
                     
                     document.getElementById('distanceResult').innerHTML = html;
+                    // drawDistanceLine(s.lat, s.lng, e.lat, e.lng, distance);
+
                     // 自动绘制公交路线
                     drawFullRoute();
-
-                    // 手机端：进入地图全屏模式
-                    if (window.innerWidth <= 768) {
-                        enterMapFullscreen();
-                    }
                     
                 } else {
                     var errorMsg = data.message || '未知错误';
@@ -2088,13 +1995,7 @@
                         document.getElementById('distanceResult').innerHTML = html;
                         map.addOverlay(walking);
                         // drawDistanceLine(s.lat, s.lng, e.lat, e.lng, distance);
-                        drawWalkingFullRoute();
-
-                        // 手机端：进入地图全屏模式
-                        if (window.innerWidth <= 768) {
-                            enterMapFullscreen();
-                        }
-
+                        drawWalkingFullRoute()
                     } else {
                         document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">步行路线规划失败</span>';
                     }
@@ -3778,34 +3679,88 @@
         }
 
         // ========== 手机端功能 ==========
-        var currentPage = 'spots';
-        var touchStartX = 0;
-        var touchEndX = 0;
+        var currentLayout = 'half'; // half, map, func
+        var currentPage = 'home';
 
-        // 页面配置
-        var pages = ['spots', 'route', 'search', 'optimize'];
-        var pageTitles = {
-            'spots': '📍 添加景点',
-            'route': '🚗 路线规划',
-            'search': '🔍 周边搜索',
-            'optimize': '🎯 优化路线'
-        };
+        // 初始化手机端
+        function initMobile() {
+            if (window.innerWidth > 768) return;
+            
+            // 显示手机端容器，隐藏 PC 端侧边栏
+            document.getElementById('mobileApp').style.display = 'flex';
+            document.querySelector('.sidebar').style.display = 'none';
+            
+            // 将 PC 端模块内容复制到手机端
+            copyModulesToMobile();
+            
+            // 绑定事件
+            bindMobileEvents();
+            
+            // 更新首页景点数量
+            updateHomeStats();
+            
+            // 显示首页
+            showMobilePage('home');
+        }
 
-        // 显示指定页面
-        function showPage(pageId, fromSwipe) {
-            // 隐藏所有页面
-            for (var i = 0; i < pages.length; i++) {
-                var id = pages[i];
-                var page = document.getElementById(id + 'Page');
-                if (page) page.style.display = 'none';
+        // 复制 PC 端模块到手机端
+        function copyModulesToMobile() {
+            var pcModules = document.querySelectorAll('.sidebar .module');
+            
+            // 景点模块（第0、1个）
+            var spotsHtml = '';
+            for (var i = 0; i <= 1 && i < pcModules.length; i++) {
+                spotsHtml += pcModules[i].outerHTML;
+            }
+            document.getElementById('spotsPage').innerHTML = spotsHtml;
+            
+            // 路线模块（第2个）
+            if (pcModules[2]) {
+                document.getElementById('routePage').innerHTML = pcModules[2].outerHTML;
             }
             
-            // 显示选中页面
-            var activePage = document.getElementById(pageId + 'Page');
-            if (activePage) activePage.style.display = 'block';
+            // 优化模块（第3个）
+            if (pcModules[3]) {
+                document.getElementById('optimizePage').innerHTML = pcModules[3].outerHTML;
+            }
             
-            // 更新导航栏激活状态
-            var navItems = document.querySelectorAll('.nav-item');
+            // 周边模块（第4个）
+            if (pcModules[4]) {
+                document.getElementById('searchPage').innerHTML = pcModules[4].outerHTML;
+            }
+        }
+
+        // 显示指定页面
+        function showMobilePage(pageId) {
+            currentPage = pageId;
+            
+            // 隐藏所有页面
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('spotsPage').style.display = 'none';
+            document.getElementById('routePage').style.display = 'none';
+            document.getElementById('searchPage').style.display = 'none';
+            document.getElementById('optimizePage').style.display = 'none';
+            
+            // 显示选中页面
+            if (pageId === 'home') {
+                document.getElementById('homePage').style.display = 'block';
+                document.getElementById('mobileTitle').innerText = '首页';
+                document.querySelector('.back-btn').style.display = 'none';
+                updateHomeStats();
+            } else {
+                var pageMap = {
+                    'spots': 'spotsPage',
+                    'route': 'routePage',
+                    'search': 'searchPage',
+                    'optimize': 'optimizePage'
+                };
+                document.getElementById(pageMap[pageId]).style.display = 'block';
+                document.getElementById('mobileTitle').innerText = getPageTitle(pageId);
+                document.querySelector('.back-btn').style.display = 'block';
+            }
+            
+            // 更新底部导航样式
+            var navItems = document.querySelectorAll('.bottom-nav .nav-item');
             navItems.forEach(function(item) {
                 if (item.getAttribute('data-page') === pageId) {
                     item.classList.add('active');
@@ -3813,143 +3768,204 @@
                     item.classList.remove('active');
                 }
             });
-            
-            // 更新标题
-            var pageTitle = document.getElementById('pageTitle');
-            if (pageTitle) pageTitle.innerHTML = pageTitles[pageId];
-            
-            // 显示/隐藏返回按钮（除了景点页）
-            var backBtn = document.getElementById('backBtn');
-            if (backBtn) {
-                backBtn.style.display = pageId === 'spots' ? 'none' : 'flex';
-            }
-            
-            currentPage = pageId;
-            
-            // 如果切换到路线页面，地图恢复正常大小
-            if (pageId === 'route') {
-                exitMapFullscreen();
-            }
         }
 
-        // 返回上一页（回到景点页）
-        function goBack() {
-            showPage('spots');
+        // 获取页面标题
+        function getPageTitle(pageId) {
+            var titles = {
+                'spots': '添加景点',
+                'route': '路线规划',
+                'search': '周边搜索',
+                'optimize': '优化行程'
+            };
+            return titles[pageId] || '行程规划';
         }
 
-        // 地图全屏模式（路线规划时调用）
-        function enterMapFullscreen() {
-            var mapDiv = document.getElementById('map');
-            var sidebar = document.querySelector('.sidebar');
+        // 切换布局
+        function setLayout(layout) {
+            currentLayout = layout;
+            var contentDiv = document.getElementById('mobileContent');
+            var mapContainer = document.getElementById('mobileMapContainer');
             
-            if (mapDiv) {
-                mapDiv.classList.add('fullscreen');
+            // 重置样式
+            contentDiv.classList.remove('fullscreen', 'hidden');
+            mapContainer.classList.remove('fullscreen', 'hidden');
+            
+            switch(layout) {
+                case 'half':
+                    contentDiv.style.flex = '1';
+                    mapContainer.style.height = '50%';
+                    break;
+                case 'map':
+                    mapContainer.classList.add('fullscreen');
+                    contentDiv.classList.add('hidden');
+                    break;
+                case 'func':
+                    contentDiv.classList.add('fullscreen');
+                    mapContainer.classList.add('hidden');
+                    break;
             }
-            if (sidebar) {
-                sidebar.style.display = 'none';
-            }
-        }
-
-        // 退出地图全屏模式
-        function exitMapFullscreen() {
-            var mapDiv = document.getElementById('map');
-            if (mapDiv) {
-                mapDiv.classList.remove('fullscreen');
-            }
-        }
-
-        // 手势滑动：监听触摸事件
-        function initSwipe() {
-            var container = document.querySelector('.sidebar') || document.body;
             
-            container.addEventListener('touchstart', function(e) {
-                touchStartX = e.changedTouches[0].screenX;
-            });
-            
-            container.addEventListener('touchend', function(e) {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
-            });
-        }
-
-        function handleSwipe() {
-            var currentIndex = pages.indexOf(currentPage);
-            var minSwipeDistance = 50;
-            
-            if (touchEndX - touchStartX > minSwipeDistance) {
-                // 向右滑动：上一页
-                if (currentIndex > 0) {
-                    showPage(pages[currentIndex - 1]);
+            // 触发地图 resize
+            setTimeout(function() {
+                if (map && typeof map.resize === 'function') {
+                    map.resize();
+                    map.centerAndZoom(map.getCenter(), map.getZoom());
                 }
-            } else if (touchStartX - touchEndX > minSwipeDistance) {
-                // 向左滑动：下一页
-                if (currentIndex < pages.length - 1) {
-                    showPage(pages[currentIndex + 1]);
-                }
+            }, 100);
+        }
+
+        // 更新首页统计
+        function updateHomeStats() {
+            var spotCount = document.getElementById('homeSpotCount');
+            if (spotCount) {
+                spotCount.innerText = markersData.length;
             }
         }
 
-        // 修改路线规划函数，在显示路线时自动全屏地图
-        // 在 calcTransitRoute、calcDrivingRoute、calcWalkingRoute 等函数中
-        // 显示结果时调用 enterMapFullscreen()
-
-        // 示例：在公交路线规划成功后调用
-        // 找到 document.getElementById('distanceResult').innerHTML = html; 这行后面添加：
-        // if (window.innerWidth <= 768) enterMapFullscreen();
-
-        // 初始化
-        function initMobileFeatures() {
-            // 绑定导航栏点击
-            var navItems = document.querySelectorAll('.nav-item');
+        // 绑定手机端事件
+        function bindMobileEvents() {
+            // 底部导航点击
+            var navItems = document.querySelectorAll('.bottom-nav .nav-item');
             navItems.forEach(function(item) {
                 item.addEventListener('click', function() {
                     var pageId = this.getAttribute('data-page');
-                    showPage(pageId);
+                    showMobilePage(pageId);
                 });
             });
             
-            // 绑定返回按钮
-            var backBtn = document.getElementById('backBtn');
-            if (backBtn) {
-                backBtn.addEventListener('click', goBack);
-            }
+            // 首页卡片点击
+            var homeCards = document.querySelectorAll('.home-card');
+            homeCards.forEach(function(card) {
+                card.addEventListener('click', function() {
+                    var pageId = this.getAttribute('data-page');
+                    showMobilePage(pageId);
+                });
+            });
             
-            // 初始化手势滑动
-            initSwipe();
+            // 返回按钮
+            var backBtn = document.getElementById('mobileBackBtn');
+            backBtn.addEventListener('click', function() {
+                showMobilePage('home');
+            });
             
-            // 默认显示景点页
-            showPage('spots');
+            // 布局切换按钮
+            document.getElementById('layoutHalfBtn').addEventListener('click', function() { setLayout('half'); });
+            document.getElementById('layoutMapBtn').addEventListener('click', function() { setLayout('map'); });
+            document.getElementById('layoutFuncBtn').addEventListener('click', function() { setLayout('func'); });
+            
+            // 监听景点数量变化
+            var observer = new MutationObserver(function() {
+                updateHomeStats();
+            });
+            observer.observe(document.getElementById('spotListContainer') || document.body, {
+                childList: true,
+                subtree: true
+            });
         }
 
-        // 页面加载完成后初始化
+        // 在页面加载时初始化
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initMobileFeatures);
+            document.addEventListener('DOMContentLoaded', initMobile);
         } else {
-            initMobileFeatures();
+            initMobile();
         }
-
+        // ========== 手机端功能 ==========
 
     </script>
 
-    <!-- 底部导航栏 -->
-    <div class="bottom-nav" id="bottomNav">
-        <button class="nav-item active" data-page="spots">
-            <div class="nav-icon">📍</div>
-            <div class="nav-label">添加景点</div>
-        </button>
-        <button class="nav-item" data-page="route">
-            <div class="nav-icon">🚗</div>
-            <div class="nav-label">路线规划</div>
-        </button>
-        <button class="nav-item" data-page="search">
-            <div class="nav-icon">🔍</div>
-            <div class="nav-label">周边搜索</div>
-        </button>
-        <button class="nav-item" data-page="optimize">
-            <div class="nav-icon">🎯</div>
-            <div class="nav-label">优化行程</div>
-        </button>
+    <!-- 手机端容器（仅手机端显示） -->
+    <div id="mobileApp" class="mobile-container" style="display: none;">
+        <!-- 头部 -->
+        <div class="mobile-header">
+            <button class="back-btn" id="mobileBackBtn">←</button>
+            <span id="mobileTitle">首页</span>
+            <div class="layout-controls">
+                <button class="layout-btn" id="layoutHalfBtn" style="background: rgba(255,255,255,0.3);">半屏</button>
+                <button class="layout-btn" id="layoutMapBtn">地图</button>
+                <button class="layout-btn" id="layoutFuncBtn">功能</button>
+            </div>
+        </div>
+        
+        <!-- 功能内容区域 -->
+        <div id="mobileContent" class="mobile-content">
+            <!-- 首页内容（默认显示） -->
+            <div id="homePage">
+                <div class="stats-card">
+                    <div class="stats-number" id="homeSpotCount">0</div>
+                    <div>已添加景点</div>
+                </div>
+                
+                <div class="home-card" data-page="spots">
+                    <div class="home-card-icon">📍</div>
+                    <div class="home-card-title">添加景点</div>
+                    <div class="home-card-desc">搜索并添加景点到列表</div>
+                </div>
+                
+                <div class="home-card" data-page="route">
+                    <div class="home-card-icon">🚗</div>
+                    <div class="home-card-title">路线规划</div>
+                    <div class="home-card-desc">规划出行路线</div>
+                </div>
+                
+                <div class="home-card" data-page="search">
+                    <div class="home-card-icon">🔍</div>
+                    <div class="home-card-title">周边搜索</div>
+                    <div class="home-card-desc">搜索周边酒店、美食</div>
+                </div>
+                
+                <div class="home-card" data-page="optimize">
+                    <div class="home-card-icon">🎯</div>
+                    <div class="home-card-title">优化行程</div>
+                    <div class="home-card-desc">智能排序游览顺序</div>
+                </div>
+            </div>
+            
+            <!-- 功能页面容器（动态填充） -->
+            <div id="spotsPage" style="display: none;">
+                <!-- 这里复制 PC 端景点模块的 HTML -->
+            </div>
+            <div id="routePage" style="display: none;">
+                <!-- 这里复制 PC 端路线规划模块的 HTML -->
+            </div>
+            <div id="searchPage" style="display: none;">
+                <!-- 这里复制 PC 端周边搜索模块的 HTML -->
+            </div>
+            <div id="optimizePage" style="display: none;">
+                <!-- 这里复制 PC 端优化行程模块的 HTML -->
+            </div>
+        </div>
+        
+        <!-- 地图容器 -->
+        <div id="mobileMapContainer" class="mobile-map-container">
+            <div id="map"></div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="bottom-nav">
+            <button class="nav-item" data-page="home">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">首页</div>
+            </button>
+            <button class="nav-item" data-page="spots">
+                <div class="nav-icon">📍</div>
+                <div class="nav-label">景点</div>
+            </button>
+            <button class="nav-item" data-page="route">
+                <div class="nav-icon">🚗</div>
+                <div class="nav-label">路线</div>
+            </button>
+            <button class="nav-item" data-page="search">
+                <div class="nav-icon">🔍</div>
+                <div class="nav-label">周边</div>
+            </button>
+            <button class="nav-item" data-page="optimize">
+                <div class="nav-icon">🎯</div>
+                <div class="nav-label">优化</div>
+            </button>
+        </div>
     </div>
+    <!-- 手机端容器（仅手机端显示） -->
 
 </body>
 </html>
