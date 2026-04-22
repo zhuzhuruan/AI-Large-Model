@@ -596,7 +596,7 @@
             
             /* 抽屉状态 */
             .drawer-panel.collapsed {
-                transform: translateY(calc(100% - 60px));
+                transform: translateY(calc(100% - 80px));  /* 留出80px高度，露出把手 */
             }
             .drawer-panel.half {
                 transform: translateY(55%);
@@ -1073,7 +1073,7 @@
         // ================================================================
         // ========== 版本自动更新检测 ==========
         (function() {
-            var APP_VERSION = '20260422.01';
+            var APP_VERSION = '20260422.02';
             var savedVersion = localStorage.getItem('travel_app_version');
             if (savedVersion !== APP_VERSION) {
                 localStorage.setItem('travel_app_version', APP_VERSION);
@@ -3867,9 +3867,18 @@
             if (sidebar) {
                 sidebar.style.display = 'none';
             }
-
         }
         
+        // 阻止抽屉内容区域的滚动冒泡到地图
+        if (drawerContent) {
+            drawerContent.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+            });
+            drawerContent.addEventListener('touchmove', function(e) {
+                e.stopPropagation();
+            });
+        }
+
         
         // 确保底部导航可见
         var bottomNav = document.querySelector('.bottom-nav');
@@ -3946,70 +3955,118 @@
             drawerState = state;
             drawer.classList.remove('collapsed', 'half', 'expanded');
             drawer.classList.add(state);
-            console.log('抽屉状态:', state);
+            
+            // 根据状态禁用/启用地图交互
+            if (state === 'expanded' || state === 'half') {
+                // 抽屉打开时，让用户专注内容，暂时禁用地图
+                if (map) {
+                    map.disableDragging();
+                }
+            } else {
+                // 抽屉收起时，恢复地图
+                setTimeout(function() {
+                    if (map && drawerState === 'collapsed') {
+                        map.enableDragging();
+                    }
+                }, 300);
+            }
         }
         
         function getDrawerHeightPercent() {
-            if (drawerState === 'collapsed') return 0.08;
+            if (drawerState === 'collapsed') return 0.12;  // 12%高度，露出把手
             if (drawerState === 'half') return 0.45;
             return 0.9;
         }
         
+        // 抽屉拖动 - 完全阻止事件冒泡到地图
         function onTouchStart(e) {
-            // 阻止事件冒泡到地图
+            // 阻止冒泡和默认行为
             e.stopPropagation();
             e.preventDefault();
             
-            // 临时禁用地图拖拽
-            map.disableDragging();
+            // 禁用地图所有交互
+            if (map) {
+                map.disableDragging();
+                map.disableScrollWheelZoom();
+                map.disableDoubleClickZoom();
+                map.disablePinchToZoom();
+            }
             
             startY = e.touches[0].clientY;
             startTransform = getDrawerHeightPercent();
             isDragging = true;
             drawer.style.transition = 'none';
+            
+            console.log('拖动开始');
         }
 
         function onTouchMove(e) {
             if (!isDragging) return;
             
-            // 阻止事件冒泡
+            // 关键：阻止冒泡和默认行为
             e.stopPropagation();
             e.preventDefault();
             
             var deltaY = startY - e.touches[0].clientY;
             var deltaPercent = deltaY / window.innerHeight;
             var newPercent = startTransform + deltaPercent;
-            if (newPercent < 0.05) newPercent = 0.05;
-            if (newPercent > 0.9) newPercent = 0.9;
-            drawer.style.transform = 'translateY(' + (1 - newPercent) * 100 + '%)';
+            
+            // 限制范围
+            if (newPercent < 0.12) newPercent = 0.12;      // 最小12%高度（露出把手）
+            if (newPercent > 0.9) newPercent = 0.9;        // 最大90%高度
+            
+            var translateY = (1 - newPercent) * 100;
+            drawer.style.transform = 'translateY(' + translateY + '%)';
         }
 
         function onTouchEnd(e) {
             if (!isDragging) {
-                // 如果没有拖动，也要恢复地图拖拽
-                map.enableDragging();
+                // 恢复地图
+                enableMapDragging();
                 return;
             }
             
+            e.stopPropagation();
+            e.preventDefault();
+            
             isDragging = false;
             drawer.style.transition = 'transform 0.3s ease';
+            
+            // 获取当前高度百分比
             var transform = drawer.style.transform;
-            var percent = 1 - parseFloat(transform.replace('translateY(', '').replace('%)', '')) / 100;
+            var percent = 1;
+            if (transform) {
+                var match = transform.match(/translateY\(([-\d.]+)%\)/);
+                if (match) {
+                    percent = 1 - parseFloat(match[1]) / 100;
+                }
+            }
+            
+            // 根据位置决定状态
             if (percent < 0.25) setDrawerState('collapsed');
             else if (percent < 0.65) setDrawerState('half');
             else setDrawerState('expanded');
             
-            // 恢复地图拖拽
+            // 延迟恢复地图
             setTimeout(function() {
+                enableMapDragging();
+            }, 200);
+        }
+
+        // 恢复地图拖拽功能
+        function enableMapDragging() {
+            if (map) {
                 map.enableDragging();
-            }, 100);
-        }        
+                map.enableScrollWheelZoom();
+                map.enableDoubleClickZoom();
+                map.enablePinchToZoom();
+            }
+        }     
 
         if (handle) {
-            // 添加 CSS 样式防止浏览器滚动
             handle.style.touchAction = 'none';
             
-            // 点击切换状态（简单好用）
+            // 点击切换状态
             handle.addEventListener('click', function(e) {
                 e.stopPropagation();
                 if (drawerState === 'collapsed') setDrawerState('half');
@@ -4017,11 +4074,12 @@
                 else setDrawerState('collapsed');
             });
             
-            // 拖动也支持（给喜欢拖动的人）
-            handle.addEventListener('touchstart', onTouchStart);
-            handle.addEventListener('touchmove', onTouchMove);
+            // 拖动
+            handle.addEventListener('touchstart', onTouchStart, { passive: false });
+            handle.addEventListener('touchmove', onTouchMove, { passive: false });
             handle.addEventListener('touchend', onTouchEnd);
-        }        
+        }      
+
         // ========== 首页卡片点击 ==========
         homeCards.forEach(function(card) {
             card.addEventListener('click', function() {
