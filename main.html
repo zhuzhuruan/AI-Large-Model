@@ -520,283 +520,294 @@
         }
 
         /* ========== 手机端样式 ========== */
-        /* ========== 手机端基础布局 ========== */
-        /* ========== 手机端样式 ========== */
         @media (max-width: 768px) {
-            /* 侧边栏 */
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 50%;
-                overflow-y: auto;
-                z-index: 100;
-                background: #f8f9fa;
-                border-radius: 0;
-                box-shadow: none;
-                padding-top: 48px;  /* 新增：为标题栏留出空间 */
-            }
-            
-            /* 隐藏侧边栏中原有的模块标题（避免重复） */
-            .sidebar .module-title {
-                display: none;
-            }
-            
-            /* 地图 */
-            #map {
-                position: fixed;
-                top: 50%;
-                left: 0;
-                width: 100%;
-                height: 50%;
-                z-index: 1;
-            }
-            
             /* 隐藏 PC 端头部 */
             .header {
                 display: none;
             }
             
-            /* 手机端头部 */
-            .mobile-header-bar {
+            /* 地图全屏 */
+            #map {
                 position: fixed;
                 top: 0;
                 left: 0;
                 width: 100%;
-                height: 44px;  /* 减小高度 */
-                background: rgba(255,255,255,0.96);
-                backdrop-filter: blur(10px);
+                height: 100%;
+                z-index: 1;
+            }
+            
+            /* 隐藏 PC 端侧边栏（功能内容会放到抽屉里） */
+            .sidebar {
+                display: none;
+            }
+            
+            /* 固定头部 */
+            .mobile-header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 50px;
+                background: white;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 16px;
+                z-index: 200;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+                box-sizing: border-box;
+            }
+            
+            .header-back {
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #007AFF;
+                width: 32px;
+                height: 32px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                z-index: 1000;
-                font-size: 16px;
-                font-weight: 600;
-                display: none;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             }
-
             
-            /* 底部导航栏 */
-            .mobile-nav {
+            .header-title {
+                font-size: 17px;
+                font-weight: 600;
+                color: #333;
+            }
+            
+            .header-placeholder {
+                width: 32px;
+            }
+            
+            /* 抽屉面板 */
+            .drawer-panel {
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                background: rgba(255,255,255,0.96);
-                backdrop-filter: blur(10px);
-                display: flex !important;
-                z-index: 200;
-                height: 54px;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+                background: white;
+                border-radius: 20px 20px 0 0;
+                z-index: 100;
+                transition: transform 0.3s ease;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             }
             
-            .mobile-nav .nav-btn {
+            /* 抽屉状态 */
+            .drawer-panel.collapsed {
+                transform: translateY(calc(100% - 60px));
+            }
+            .drawer-panel.half {
+                transform: translateY(55%);
+            }
+            .drawer-panel.expanded {
+                transform: translateY(0);
+            }
+            
+            /* 拖动条 */
+            .drawer-handle {
+                width: 40px;
+                height: 4px;
+                background: #ccc;
+                border-radius: 2px;
+                margin: 12px auto;
+                cursor: pointer;
+            }
+            
+            /* 抽屉内容 */
+            .drawer-content {
+                padding: 0 16px 20px;
+                max-height: 60vh;
+                overflow-y: auto;
+            }
+            
+            /* 底部导航栏 */
+            .bottom-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background: white;
+                border-top: 1px solid #eee;
+                display: flex;
+                padding: 8px 0;
+                z-index: 1000;
+                height: 56px;
+            }
+            
+            .bottom-nav .nav-btn {
                 flex: 1;
                 background: none;
                 border: none;
-                font-size: 12px;
-                cursor: pointer;
-                color: #8e8e93;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                justify-content: center;
                 gap: 4px;
-                transition: all 0.2s;
+                cursor: pointer;
+                color: #8e8e93;
             }
             
-            .mobile-nav .nav-btn::before {
+            .bottom-nav .nav-btn.active {
+                color: #007AFF;
+            }
+            
+            .bottom-nav .nav-btn::before {
                 content: attr(data-icon);
                 font-size: 22px;
             }
             
-            .mobile-nav .nav-btn.active {
-                color: #007AFF;
+            .bottom-nav .nav-btn span {
+                font-size: 10px;
             }
             
-            /* 布局切换按钮 */
-            .layout-switch {
+            /* 首页样式 */
+            .home-page {
                 position: fixed;
-                bottom: 70px;
-                right: 12px;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 z-index: 300;
-                display: flex;
-                gap: 8px;
-                background: rgba(0,0,0,0.7);
-                backdrop-filter: blur(8px);
-                padding: 6px 12px;
-                border-radius: 30px;
-            }
-            
-            .layout-btn-small {
-                background: none;
-                border: none;
-                color: white;
-                font-size: 12px;
-                padding: 4px 10px;
-                border-radius: 20px;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            
-            .layout-btn-small.active {
-                background: #007AFF;
-            }
-            
-            /* 布局模式 */
-            .sidebar.fullscreen-map {
-                display: none !important;
-            }
-            
-            #map.fullscreen-map {
-                top: 0 !important;
-                height: 100% !important;
-            }
-            
-            .sidebar.fullscreen-func {
-                height: 100% !important;
-            }
-            
-            #map.fullscreen-func {
-                display: none !important;
+                overflow-y: auto;
+                display: none;
             }
         }
 
-        /* ========== 首页样式（独立，不在媒体查询内） ========== */
-/* ========== 首页样式 ========== */
-.home-page {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    overflow-y: auto;
-    display: none;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+    /* ========== 首页样式（独立，不在媒体查询内） ========== */
+    .home-page {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        overflow-y: auto;
+        display: none;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
 
-/* 背景水印 */
-.home-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-repeat: repeat;
-    background-size: 80px 80px;
-    opacity: 0.08;
-    pointer-events: none;
-}
+    /* 背景水印 */
+    .home-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-repeat: repeat;
+        background-size: 80px 80px;
+        opacity: 0.08;
+        pointer-events: none;
+    }
 
-/* 主容器 */
-.home-container {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 100vh;
-    padding: 40px 24px 40px;
-    box-sizing: border-box;
-}
+    /* 主容器 */
+    .home-container {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 100vh;
+        padding: 40px 24px 40px;
+        box-sizing: border-box;
+    }
 
-/* 顶部区域 */
-.home-top {
-    text-align: center;
-}
+    /* 顶部区域 */
+    .home-top {
+        text-align: center;
+    }
 
-.home-logo {
-    font-size: 56px;
-    margin-bottom: 12px;
-}
+    .home-logo {
+        font-size: 56px;
+        margin-bottom: 12px;
+    }
 
-.home-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 8px;
-}
+    .home-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 8px;
+    }
 
-.home-slogan {
-    font-size: 13px;
-    color: rgba(255,255,255,0.85);
-    line-height: 3;
-    margin-bottom: 0;
-}
+    .home-slogan {
+        font-size: 13px;
+        color: rgba(255,255,255,0.85);
+        line-height: 3;
+        margin-bottom: 0;
+    }
 
-/* 网格区域 */
-.home-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    width: 100%;
-    max-width: 280px;
-    margin: 10px auto 0;
-}
+    /* 网格区域 */
+    .home-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        width: 100%;
+        max-width: 280px;
+        margin: 10px auto 0;
+    }
 
-.home-grid-card {
-    background: rgba(255,255,255,0.95);
-    border-radius: 20px;
-    padding: 18px 8px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    backdrop-filter: blur(10px);
-}
+    .home-grid-card {
+        background: rgba(255,255,255,0.95);
+        border-radius: 20px;
+        padding: 18px 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        backdrop-filter: blur(10px);
+    }
 
-.home-grid-card:active {
-    transform: scale(0.96);
-    background: white;
-}
+    .home-grid-card:active {
+        transform: scale(0.96);
+        background: white;
+    }
 
-.grid-icon {
-    font-size: 34px;
-    margin-bottom: 10px;
-}
+    .grid-icon {
+        font-size: 34px;
+        margin-bottom: 10px;
+    }
 
-.grid-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 6px;
-}
+    .grid-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 6px;
+    }
 
-.grid-desc {
-    font-size: 11px;
-    color: #999;
-}
+    .grid-desc {
+        font-size: 11px;
+        color: #999;
+    }
 
-/* 按钮区域 */
-.home-start {
-    text-align: center;
-    margin-top: 20px;
-}
+    /* 按钮区域 */
+    .home-start {
+        text-align: center;
+        margin-top: 20px;
+    }
 
-.home-start-btn {
-    background: white;
-    border: none;
-    border-radius: 50px;
-    padding: 14px 0;
-    color: #667eea;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    width: 70%;
-    max-width: 220px;
-    display: block;
-    margin: 0 auto;
-}
+    .home-start-btn {
+        background: white;
+        border: none;
+        border-radius: 50px;
+        padding: 14px 0;
+        color: #667eea;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        width: 70%;
+        max-width: 220px;
+        display: block;
+        margin: 0 auto;
+    }
 
-.home-start-btn:active {
-    transform: scale(0.97);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-        /* ========== 手机端样式 ========== */
+    .home-start-btn:active {
+        transform: scale(0.97);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* ========== 手机端样式 ========== */
 
     </style>
 </head>
@@ -1030,25 +1041,26 @@
         </div>
     </div>
 
-    <!-- 2.2 底部导航栏（仅手机端显示） -->
-    <div class="mobile-nav" style="display: none;">
-        <button class="nav-btn" data-module="0" data-icon="📍">景点</button>
-        <button class="nav-btn" data-module="2" data-icon="🚗">路线</button>
-        <button class="nav-btn" data-module="3" data-icon="🎯">优化</button>
-        <button class="nav-btn" data-module="4" data-icon="🔍">周边</button>
+    <!-- 固定头部 -->
+    <div id="mobileHeader" class="mobile-header" style="display: none;">
+        <button id="backHomeBtn" class="header-back">←</button>
+        <span id="headerTitle" class="header-title">添加景点</span>
+        <div class="header-placeholder"></div>
     </div>
 
-    <!-- 4.2 底部导航栏（仅手机端显示） -->
-    <div class="layout-switch" style="display: none;">
-    <button class="layout-btn-small" data-layout="func">功能</button>
-    <button class="layout-btn-small" data-layout="map">地图</button>
-    <button class="layout-btn-small" data-layout="half">半屏</button>
+    <!-- 抽屉面板 -->
+    <div id="drawerPanel" class="drawer-panel half">
+        <div class="drawer-handle" id="drawerHandle"></div>
+        <div class="drawer-content" id="drawerContent"></div>
     </div>
 
-    <div class="mobile-header-bar" id="mobileHeaderBar">
-    <span id="mobileHeaderTitle">添加景点</span>
+    <!-- 底部导航栏 -->
+    <div class="bottom-nav">
+        <button class="nav-btn" data-page="spots" data-icon="📍"><span>景点</span></button>
+        <button class="nav-btn" data-page="route" data-icon="🚗"><span>路线</span></button>
+        <button class="nav-btn" data-page="optimize" data-icon="🎯"><span>优化</span></button>
+        <button class="nav-btn" data-page="search" data-icon="🔍"><span>周边</span></button>
     </div>
-
     <!-- =================================== -->
 
     <script>
@@ -1060,7 +1072,7 @@
         // ================================================================
         // ========== 版本自动更新检测 ==========
         (function() {
-            var APP_VERSION = '20260421.02';
+            var APP_VERSION = '20260422.01';
             var savedVersion = localStorage.getItem('travel_app_version');
             if (savedVersion !== APP_VERSION) {
                 localStorage.setItem('travel_app_version', APP_VERSION);
@@ -3803,218 +3815,241 @@
 
     <!-- 2.3 手机端导航脚本（新增） -->
     <script>
-        if (window.innerWidth <= 768) {
-            var homePage = document.getElementById('homePage');
-            var sidebar = document.querySelector('.sidebar');
-            var navBtns = document.querySelectorAll('.nav-btn');
-            var modules = document.querySelectorAll('.sidebar .module');
-            var homeCards = document.querySelectorAll('.home-card');
-            var resultModule = modules[modules.length - 1]; // 结果模块
-            
-            // 显示首页，隐藏侧边栏
-            homePage.style.display = 'block';
-            sidebar.style.display = 'none';
-
-            // 保留的头部（全屏时显示）
-            function updateMobileHeader(title) {
-                var headerTitle = document.getElementById('mobileHeaderTitle');
-                if (headerTitle) headerTitle.innerText = title;
-                var headerBar = document.getElementById('mobileHeaderBar');
-                if (headerBar) headerBar.style.display = 'flex';
+    if (window.innerWidth <= 768) {
+        console.log('手机端模式启动');
+        
+        var homePage = document.getElementById('homePage');
+        var sidebar = document.querySelector('.sidebar');
+        var navBtns = document.querySelectorAll('.bottom-nav .nav-btn');
+        
+        // 获取模块
+        var modules = document.querySelectorAll('.sidebar .module');
+        console.log('找到模块数量:', modules.length);
+        
+        var homeCards = document.querySelectorAll('.home-grid-card');
+        var startBtn = document.getElementById('startBtn');
+        var resultModule = modules[modules.length - 1];
+        
+        // 头部元素
+        var mobileHeader = document.getElementById('mobileHeader');
+        var backHomeBtn = document.getElementById('backHomeBtn');
+        var headerTitle = document.getElementById('headerTitle');
+        
+        // 抽屉元素
+        var drawer = document.getElementById('drawerPanel');
+        var handle = document.getElementById('drawerHandle');
+        var drawerContent = document.getElementById('drawerContent');
+        
+        // 抽屉状态
+        var drawerState = 'half';
+        var startY = 0;
+        var startTransform = 0;
+        var isDragging = false;
+        
+        // ========== 复制侧边栏内容到抽屉 ==========
+        // ========== 移动侧边栏内容到抽屉（不复制，保持事件绑定） ==========
+        if (modules.length > 0 && drawerContent) {
+            // 清空抽屉
+            drawerContent.innerHTML = '';
+            // 把侧边栏的模块移动到抽屉里（注意：这是移动，不是复制）
+            // 需要先保存引用，因为移动后会改变 modules 数组
+            var modulesToMove = [];
+            for (var i = 0; i < modules.length; i++) {
+                modulesToMove.push(modules[i]);
             }
-
-            // 更新景点数量
-            function updateHomeCount() {
-                var countSpan = document.getElementById('homeSpotCount');
-                if (countSpan) countSpan.innerText = markersData.length;
+            for (var i = 0; i < modulesToMove.length; i++) {
+                drawerContent.appendChild(modulesToMove[i]);
             }
-            updateHomeCount();
-            
-            // 监听景点数量变化
-            var observer = new MutationObserver(updateHomeCount);
-            var spotList = document.getElementById('spotListContainer');
-            if (spotList) observer.observe(spotList, { childList: true, subtree: true });
-            
-            // 隐藏所有模块（保留结果模块）
-            function hideAllModules() {
-                for (var i = 0; i < modules.length - 1; i++) {
-                    modules[i].style.display = 'none';
-                }
-            }
-            
-            // 显示指定模块
-            function showModule(index) {
-                hideAllModules();
-                if (modules[index]) modules[index].style.display = 'block';
-                if (resultModule) resultModule.style.display = 'block';
-                if (index === 0 && modules[1]) modules[1].style.display = 'block';
-                
-                // 根据 index 更新标题
-                var title = '';
-                if (index === 0) title = '添加景点';
-                else if (index === 2) title = '路线规划';
-                else if (index === 3) title = '优化行程';
-                else if (index === 4) title = '周边搜索';
-                updateMobileHeader(title);
-                
-                backHomeBtn.style.display = 'flex';
-            }
-            
-            // 首页卡片点击
-            homeCards.forEach(function(card) {
-                card.addEventListener('click', function() {
-                    var page = this.getAttribute('data-page');
-                    homePage.style.display = 'none';
-                    sidebar.style.display = 'block';
-                    
-                    if (page === 'spots') showModule(0);
-                    else if (page === 'route') showModule(2);
-                    else if (page === 'optimize') showModule(3);
-                    else if (page === 'search') showModule(4);
-                });
-            });
+            console.log('侧边栏模块已移动到抽屉，数量:', modulesToMove.length);
 
-            // 开始按钮点击
-            var startBtn = document.getElementById('startBtn');
-            if (startBtn) {
-                startBtn.addEventListener('click', function() {
-                    homePage.style.display = 'none';
-                    sidebar.style.display = 'block';
-                    showModule(0);  // 显示添加景点模块
-                    backHomeBtn.style.display = 'flex';
-                    updateMobileHeader('添加景点');
-                });
-            }   
-
-            // 网格卡片点击
-            var gridCards = document.querySelectorAll('.home-grid-card');
-            gridCards.forEach(function(card) {
-                card.addEventListener('click', function() {
-                    var page = this.getAttribute('data-page');
-                    homePage.style.display = 'none';
-                    sidebar.style.display = 'block';
-                    
-                    if (page === 'spots') showModule(0);
-                    else if (page === 'route') showModule(2);
-                    else if (page === 'optimize') showModule(3);
-                    else if (page === 'search') showModule(4);
-                    
-                    backHomeBtn.style.display = 'flex';
-                    updateMobileHeader(getPageTitle(page));
-                });
-            });
-
-            function getPageTitle(page) {
-                var titles = {
-                    'spots': '添加景点',
-                    'route': '路线规划',
-                    'optimize': '优化行程',
-                    'search': '周边搜索'
-                };
-                return titles[page] || '行程规划';
-            }
-
-            
-            // 底部导航点击
-            navBtns.forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var idx = parseInt(this.getAttribute('data-module'));
-                    homePage.style.display = 'none';
-                    sidebar.style.display = 'block';
-                    
-                    if (idx === 0) showModule(0);
-                    else if (idx === 2) showModule(2);
-                    else if (idx === 3) showModule(3);
-                    else if (idx === 4) showModule(4);
-                });
-            });
-            
-            // ========== 返回首页按钮（小箭头） ==========
-            var backHomeBtn = document.createElement('button');
-            backHomeBtn.innerHTML = '←';
-            backHomeBtn.style.cssText = 'position: fixed; top: 12px; left: 12px; width: 32px; height: 32px; background: transparent; color: #333; border: none; font-size: 24px; cursor: pointer; z-index: 1000; display: none;';
-            backHomeBtn.onclick = function() {
+            // 手机端：隐藏侧边栏（用抽屉代替）
+            if (sidebar) {
                 sidebar.style.display = 'none';
-                homePage.style.display = 'block';
-                updateHomeCount();
-                for (var i = 0; i < modules.length - 1; i++) {
-                    if (modules[i]) modules[i].style.display = '';
-                }
-                if (resultModule) resultModule.style.display = '';
-                backHomeBtn.style.display = 'none';
-
-                // 新增：隐藏标题栏
-                var headerBar = document.getElementById('mobileHeaderBar');
-                if (headerBar) headerBar.style.display = 'none';
-            };
-            document.body.appendChild(backHomeBtn);
-
-            // 布局切换
-            var layoutSwitch = document.querySelector('.layout-switch');
-            var layoutBtns = document.querySelectorAll('.layout-btn-small');
-            var sidebarLayout = document.querySelector('.sidebar');
-            var mapLayout = document.getElementById('map');
-
-            if (layoutSwitch) layoutSwitch.style.display = 'flex';
-
-            function setLayout(layout) {
-                sidebarLayout.classList.remove('fullscreen-map', 'fullscreen-func');
-                mapLayout.classList.remove('fullscreen-map', 'fullscreen-func');
-                
-                if (layout === 'half') {
-                    sidebarLayout.style.height = '50%';
-                    mapLayout.style.top = '50%';
-                    mapLayout.style.height = '50%';
-                    sidebarLayout.style.display = 'block';
-                    mapLayout.style.display = 'block';
-                } else if (layout === 'map') {
-                    sidebarLayout.classList.add('fullscreen-map');
-                    mapLayout.classList.add('fullscreen-map');
-                } else if (layout === 'func') {
-                    sidebarLayout.classList.add('fullscreen-func');
-                    mapLayout.classList.add('fullscreen-func');
-                }
-                
-                layoutBtns.forEach(function(btn) {
-                    btn.classList.toggle('active', btn.getAttribute('data-layout') === layout);
-                });
-                
-                // ========== 新增：重新调整地图视野 ==========
-                setTimeout(function() {
-                    if (typeof setMapView === 'function') {
-                        setMapView();
-                    } else if (map && typeof map.setViewport === 'function') {
-                        // 如果有景点标记，调整视野
-                        if (markersData && markersData.length > 0) {
-                            var bounds = new BMap.Bounds();
-                            markersData.forEach(function(p) {
-                                bounds.extend(new BMap.Point(p.lng, p.lat));
-                            });
-                            map.setViewport(bounds);
-                        } else {
-                            map.centerAndZoom(new BMap.Point(118.15, 29.78), 10);
-                        }
-                    }
-                    if (map && typeof map.resize === 'function') {
-                        map.resize();
-                    }
-                }, 150);
-
-
             }
 
-            layoutBtns.forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    setLayout(this.getAttribute('data-layout'));
-                });
-            });
-
-            setLayout('func');
         }
+        
+        
+        // 确保底部导航可见
+        var bottomNav = document.querySelector('.bottom-nav');
+        if (bottomNav) {
+            bottomNav.style.zIndex = '1000';
+            bottomNav.style.position = 'fixed';
+            bottomNav.style.bottom = '0';
+        }
+        
+        // ========== 更新头部标题 ==========
+        function updateHeaderTitle(title) {
+            if (headerTitle) headerTitle.innerText = title;
+            if (mobileHeader) mobileHeader.style.display = 'flex';
+        }
+        
+        // ========== 显示/隐藏首页 ==========
+        function showHome() {
+            homePage.style.display = 'block';
+            drawer.style.display = 'none';
+            if (mobileHeader) mobileHeader.style.display = 'none';
+            // 隐藏底部导航栏
+            var bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = 'none';
+        }
+        
+        function hideHome() {
+            homePage.style.display = 'none';
+            drawer.style.display = 'block';
+            // 显示底部导航栏
+            var bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.style.display = 'flex';
+        }
+        
+        // ========== 模块显示控制 ==========
+        function hideAllModules() {
+            var modulesInDrawer = drawerContent.querySelectorAll('.module');
+            for (var i = 0; i < modulesInDrawer.length - 1; i++) {
+                if (modulesInDrawer[i]) modulesInDrawer[i].style.display = 'none';
+            }
+        }
+        
+        function showModule(index) {
+            // 模块现在在 drawerContent 里，不是侧边栏了
+            var modulesInDrawer = drawerContent.querySelectorAll('.module');
+            for (var i = 0; i < modulesInDrawer.length - 1; i++) {
+                if (modulesInDrawer[i]) {
+                    modulesInDrawer[i].style.display = 'none';
+                }
+            }
+            if (modulesInDrawer[index]) {
+                modulesInDrawer[index].style.display = 'block';
+            }
+            // 最后一个模块（结果区域）始终显示
+            if (modulesInDrawer[modulesInDrawer.length - 1]) {
+                modulesInDrawer[modulesInDrawer.length - 1].style.display = 'block';
+            }
+            // 如果是添加景点页面，同时显示景点列表模块
+            if (index === 0 && modulesInDrawer[1]) {
+                modulesInDrawer[1].style.display = 'block';
+            }
+            
+            var title = '';
+            if (index === 0) title = '添加景点';
+            else if (index === 2) title = '路线规划';
+            else if (index === 3) title = '优化行程';
+            else if (index === 4) title = '周边搜索';
+            updateHeaderTitle(title);
+            
+            // 不需要重新绑定事件，因为按钮是原来的DOM元素
+        }
+        
+        // ========== 抽屉拖动 ==========
+        function setDrawerState(state) {
+            drawerState = state;
+            drawer.classList.remove('collapsed', 'half', 'expanded');
+            drawer.classList.add(state);
+            console.log('抽屉状态:', state);
+        }
+        
+        function getDrawerHeightPercent() {
+            if (drawerState === 'collapsed') return 0.08;
+            if (drawerState === 'half') return 0.45;
+            return 0.9;
+        }
+        
+        function onTouchStart(e) {
+            startY = e.touches[0].clientY;
+            startTransform = getDrawerHeightPercent();
+            isDragging = true;
+            drawer.style.transition = 'none';
+        }
+        
+        function onTouchMove(e) {
+            if (!isDragging) return;
+            var deltaY = startY - e.touches[0].clientY;
+            var deltaPercent = deltaY / window.innerHeight;
+            var newPercent = startTransform + deltaPercent;
+            if (newPercent < 0.05) newPercent = 0.05;
+            if (newPercent > 0.9) newPercent = 0.9;
+            drawer.style.transform = 'translateY(' + (1 - newPercent) * 100 + '%)';
+        }
+        
+        function onTouchEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            drawer.style.transition = 'transform 0.3s ease';
+            var transform = drawer.style.transform;
+            var percent = 1 - parseFloat(transform.replace('translateY(', '').replace('%)', '')) / 100;
+            if (percent < 0.25) setDrawerState('collapsed');
+            else if (percent < 0.65) setDrawerState('half');
+            else setDrawerState('expanded');
+        }
+        
+        if (handle) {
+            handle.addEventListener('touchstart', onTouchStart);
+            handle.addEventListener('touchmove', onTouchMove);
+            handle.addEventListener('touchend', onTouchEnd);
+            handle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (drawerState === 'collapsed') setDrawerState('half');
+                else if (drawerState === 'half') setDrawerState('expanded');
+                else setDrawerState('collapsed');
+            });
+            console.log('拖动事件已绑定');
+        }
+        
+        // ========== 首页卡片点击 ==========
+        homeCards.forEach(function(card) {
+            card.addEventListener('click', function() {
+                var page = this.getAttribute('data-page');
+                console.log('卡片点击:', page);
+                hideHome();
+                if (page === 'spots') showModule(0);
+                else if (page === 'route') showModule(2);
+                else if (page === 'optimize') showModule(3);
+                else if (page === 'search') showModule(4);
+                setDrawerState('half');
+            });
+        });
+        
+        // 开始按钮
+        if (startBtn) {
+            startBtn.addEventListener('click', function() {
+                console.log('开始按钮点击');
+                hideHome();
+                showModule(0);
+                setDrawerState('half');
+            });
+        }
+        
+        // ========== 底部导航点击 ==========
+        navBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var page = this.getAttribute('data-page');
+                console.log('底部导航点击:', page);
+                hideHome();
+                if (page === 'spots') showModule(0);
+                else if (page === 'route') showModule(2);
+                else if (page === 'optimize') showModule(3);
+                else if (page === 'search') showModule(4);
+                setDrawerState('half');
+            });
+        });
+        
+        // ========== 返回首页 ==========
+        if (backHomeBtn) {
+            backHomeBtn.addEventListener('click', function() {
+                console.log('返回首页');
+                showHome();
+                setDrawerState('half');
+            });
+        }
+
+        // 初始化：显示首页
+        showHome();
+        setDrawerState('half');
+
+    }
     </script>
     <!-- =================================== -->
 
 </body>
 
 </html>
-
