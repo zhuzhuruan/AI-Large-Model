@@ -547,7 +547,7 @@
                 top: 0;
                 left: 0;
                 width: 100%;
-                height: 50px;
+                height: 44px;
                 background: white;
                 display: flex;
                 align-items: center;
@@ -572,7 +572,7 @@
             }
             
             .header-title {
-                font-size: 17px;
+                font-size: 16px;
                 font-weight: 600;
                 color: #333;
             }
@@ -603,23 +603,41 @@
             }
             .drawer-panel.expanded {
                 transform: translateY(0);
+                height: 92vh;  /* 原来是auto，改成92vh接近全屏 */
             }
             
             /* 拖动条 */
             .drawer-handle {
-                width: 40px;
-                height: 4px;
+                width: 60px;
+                height: 6px;
                 background: #ccc;
-                border-radius: 2px;
+                border-radius: 3px;
                 margin: 12px auto;
                 cursor: pointer;
-                touch-action: none;  /* 防止浏览器默认滚动行为 */
+                touch-action: none;
+                position: relative;
+            }
+
+            /* 扩大点击区域 */
+            .drawer-handle::after {
+                content: '';
+                position: absolute;
+                top: -15px;
+                left: -20px;
+                right: -20px;
+                bottom: -15px;
+            }
+
+            /* 点击反馈 */
+            .drawer-handle:active {
+                background: #999;
+                transform: scale(0.96);
             }
             
             /* 抽屉内容 */
             .drawer-content {
                 padding: 0 16px 20px;
-                max-height: 60vh;
+                max-height: calc(92vh - 60px);  /* 配合全屏高度 */
                 overflow-y: auto;
             }
             
@@ -676,137 +694,176 @@
             }
         }
 
-    /* ========== 首页样式（独立，不在媒体查询内） ========== */
-    .home-page {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1000;
-        overflow-y: auto;
-        display: none;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+        /* ========== 首页样式（独立，不在媒体查询内） ========== */
+        .home-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            overflow-y: auto;
+            display: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
 
-    /* 背景水印 */
-    .home-bg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-repeat: repeat;
-        background-size: 80px 80px;
-        opacity: 0.08;
-        pointer-events: none;
-    }
+        /* 背景水印 */
+        .home-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-repeat: repeat;
+            background-size: 80px 80px;
+            opacity: 0.08;
+            pointer-events: none;
+        }
 
-    /* 主容器 */
-    .home-container {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        min-height: 100vh;
-        padding: 40px 24px 40px;
-        box-sizing: border-box;
-    }
+        /* 主容器 */
+        .home-container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100vh;
+            padding: 40px 24px 40px;
+            box-sizing: border-box;
+        }
 
-    /* 顶部区域 */
-    .home-top {
-        text-align: center;
-    }
+        /* 顶部区域 */
+        .home-top {
+            text-align: center;
+        }
 
-    .home-logo {
-        font-size: 56px;
-        margin-bottom: 12px;
-    }
+        .home-logo {
+            font-size: 56px;
+            margin-bottom: 12px;
+        }
 
-    .home-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: white;
-        margin-bottom: 8px;
-    }
+        .home-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+        }
 
-    .home-slogan {
-        font-size: 13px;
-        color: rgba(255,255,255,0.85);
-        line-height: 3;
-        margin-bottom: 0;
-    }
+        .home-slogan {
+            font-size: 13px;
+            color: rgba(255,255,255,0.85);
+            line-height: 2.5;
+            margin-bottom: 0;
+        }
 
-    /* 网格区域 */
-    .home-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        width: 100%;
-        max-width: 280px;
-        margin: 10px auto 0;
-    }
+        /* 网格区域 */
+        .home-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+            max-width: 280px;
+            margin: 10px auto 0;
+        }
 
-    .home-grid-card {
-        background: rgba(255,255,255,0.95);
-        border-radius: 20px;
-        padding: 18px 8px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        backdrop-filter: blur(10px);
-    }
+        .home-grid-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 18px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
 
-    .home-grid-card:active {
-        transform: scale(0.96);
-        background: white;
-    }
+        .home-grid-card:active {
+            transform: scale(0.96);
+            background: white;
+        }
 
-    .grid-icon {
-        font-size: 34px;
-        margin-bottom: 10px;
-    }
+        .grid-icon {
+            font-size: 34px;
+            margin-bottom: 10px;
+        }
 
-    .grid-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 6px;
-    }
+        .grid-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
 
-    .grid-desc {
-        font-size: 11px;
-        color: #999;
-    }
+        .grid-desc {
+            font-size: 11px;
+            color: #999;
+        }
 
-    /* 按钮区域 */
-    .home-start {
-        text-align: center;
-        margin-top: 20px;
-    }
+        /* 按钮区域 */
+        .home-start {
+            text-align: center;
+            margin-top: 20px;
+        }
 
-    .home-start-btn {
-        background: white;
-        border: none;
-        border-radius: 50px;
-        padding: 14px 0;
-        color: #667eea;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        width: 70%;
-        max-width: 220px;
-        display: block;
-        margin: 0 auto;
-    }
+        .home-start-btn {
+            background: white;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 0;
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            width: 70%;
+            max-width: 220px;
+            display: block;
+            margin: 0 auto;
+        }
 
-    .home-start-btn:active {
-        transform: scale(0.97);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+        .home-start-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* 版本更新提示动画 */
+        .update-flash {
+            animation: flashHighlight 0.5s ease-in-out 3;
+        }
+
+        @keyframes flashHighlight {
+            0% { background-color: transparent; color: rgba(255,255,255,0.6); }
+            50% { background-color: #4CAF50; color: white; border-radius: 20px; padding: 0 8px; }
+            100% { background-color: transparent; color: rgba(255,255,255,0.6); }
+        }
+
+        /* Toast 提示样式 */
+        .toast-notice {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            z-index: 10000;
+            white-space: nowrap;
+            backdrop-filter: blur(10px);
+            animation: toastFadeIn 0.3s ease;
+        }
+
+        @keyframes toastFadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
 
     /* ========== 手机端样式 ========== */
 
@@ -1039,6 +1096,12 @@
             
             <!-- 开始按钮 -->
             <button class="home-start-btn" id="startBtn">开始使用</button>
+
+            <!-- 版本信息 -->
+            <div class="version-info" id="versionInfo" style="text-align: center; margin-top: 20px; font-size: 11px; color: rgba(255,255,255,0.6);">
+                版本 v<span id="versionNumber">20260422.01</span>
+                <span id="updateBadge" style="display: none; background: #4CAF50; padding: 2px 8px; border-radius: 20px; margin-left: 8px; font-size: 10px;">✓ 已更新</span>
+            </div>
         </div>
     </div>
 
@@ -1073,10 +1136,16 @@
         // ================================================================
         // ========== 版本自动更新检测 ==========
         (function() {
-            var APP_VERSION = '20260422.02';
+            var APP_VERSION = '20260422.03';  // 每次更新代码时修改这个数字
             var savedVersion = localStorage.getItem('travel_app_version');
             if (savedVersion !== APP_VERSION) {
+                // 记录旧版本号和新版本号，用于提示
+                var oldVersion = savedVersion || '首次安装';
                 localStorage.setItem('travel_app_version', APP_VERSION);
+                localStorage.setItem('need_update_notice', 'true');
+                localStorage.setItem('old_version', oldVersion);
+                localStorage.setItem('new_version', APP_VERSION);
+                // 刷新页面
                 window.location.reload(true);
             }
         })();
@@ -3816,322 +3885,419 @@
 
     <!-- 2.3 手机端导航脚本（新增） -->
     <script>
-    if (window.innerWidth <= 768) {
-        console.log('手机端模式启动');
-        
-        var homePage = document.getElementById('homePage');
-        var sidebar = document.querySelector('.sidebar');
-        var navBtns = document.querySelectorAll('.bottom-nav .nav-btn');
-        
-        // 获取模块
-        var modules = document.querySelectorAll('.sidebar .module');
-        console.log('找到模块数量:', modules.length);
-        
-        var homeCards = document.querySelectorAll('.home-grid-card');
-        var startBtn = document.getElementById('startBtn');
-        var resultModule = modules[modules.length - 1];
-        
-        // 头部元素
-        var mobileHeader = document.getElementById('mobileHeader');
-        var backHomeBtn = document.getElementById('backHomeBtn');
-        var headerTitle = document.getElementById('headerTitle');
-        
-        // 抽屉元素
-        var drawer = document.getElementById('drawerPanel');
-        var handle = document.getElementById('drawerHandle');
-        var drawerContent = document.getElementById('drawerContent');
-        
-        // 抽屉状态
-        var drawerState = 'half';
-        var startY = 0;
-        var startTransform = 0;
-        var isDragging = false;
-        
-        // ========== 复制侧边栏内容到抽屉 ==========
-        // ========== 移动侧边栏内容到抽屉（不复制，保持事件绑定） ==========
-        if (modules.length > 0 && drawerContent) {
-            // 清空抽屉
-            drawerContent.innerHTML = '';
-            // 把侧边栏的模块移动到抽屉里（注意：这是移动，不是复制）
-            // 需要先保存引用，因为移动后会改变 modules 数组
-            var modulesToMove = [];
-            for (var i = 0; i < modules.length; i++) {
-                modulesToMove.push(modules[i]);
-            }
-            for (var i = 0; i < modulesToMove.length; i++) {
-                drawerContent.appendChild(modulesToMove[i]);
-            }
-            console.log('侧边栏模块已移动到抽屉，数量:', modulesToMove.length);
+        if (window.innerWidth <= 768) {
+            console.log('手机端模式启动');
+            
+            var homePage = document.getElementById('homePage');
+            var sidebar = document.querySelector('.sidebar');
+            var navBtns = document.querySelectorAll('.bottom-nav .nav-btn');
+            
+            // 获取模块
+            var modules = document.querySelectorAll('.sidebar .module');
+            console.log('找到模块数量:', modules.length);
+            
+            var homeCards = document.querySelectorAll('.home-grid-card');
+            var startBtn = document.getElementById('startBtn');
+            var resultModule = modules[modules.length - 1];
+            
+            // 头部元素
+            var mobileHeader = document.getElementById('mobileHeader');
+            var backHomeBtn = document.getElementById('backHomeBtn');
+            var headerTitle = document.getElementById('headerTitle');
+            
+            // 抽屉元素
+            var drawer = document.getElementById('drawerPanel');
+            var handle = document.getElementById('drawerHandle');
+            var drawerContent = document.getElementById('drawerContent');
+            
+            // 抽屉状态
+            var drawerState = 'half';
+            var startY = 0;
+            var startTransform = 0;
+            var isDragging = false;
+            
+            // ========== 复制侧边栏内容到抽屉 ==========
+            // ========== 移动侧边栏内容到抽屉（不复制，保持事件绑定） ==========
+            if (modules.length > 0 && drawerContent) {
+                // 清空抽屉
+                drawerContent.innerHTML = '';
+                // 把侧边栏的模块移动到抽屉里（注意：这是移动，不是复制）
+                // 需要先保存引用，因为移动后会改变 modules 数组
+                var modulesToMove = [];
+                for (var i = 0; i < modules.length; i++) {
+                    modulesToMove.push(modules[i]);
+                }
+                for (var i = 0; i < modulesToMove.length; i++) {
+                    drawerContent.appendChild(modulesToMove[i]);
+                }
+                console.log('侧边栏模块已移动到抽屉，数量:', modulesToMove.length);
 
-            // 手机端：隐藏侧边栏（用抽屉代替）
-            if (sidebar) {
-                sidebar.style.display = 'none';
-            }
-        }
-        
-        // 阻止抽屉内容区域的滚动冒泡到地图
-        if (drawerContent) {
-            drawerContent.addEventListener('touchstart', function(e) {
-                e.stopPropagation();
-            });
-            drawerContent.addEventListener('touchmove', function(e) {
-                e.stopPropagation();
-            });
-        }
-
-        
-        // 确保底部导航可见
-        var bottomNav = document.querySelector('.bottom-nav');
-        if (bottomNav) {
-            bottomNav.style.zIndex = '1000';
-            bottomNav.style.position = 'fixed';
-            bottomNav.style.bottom = '0';
-        }
-        
-        // ========== 更新头部标题 ==========
-        function updateHeaderTitle(title) {
-            if (headerTitle) headerTitle.innerText = title;
-            if (mobileHeader) mobileHeader.style.display = 'flex';
-        }
-        
-        // ========== 显示/隐藏首页 ==========
-        function showHome() {
-            homePage.style.display = 'block';
-            drawer.style.display = 'none';
-            if (mobileHeader) mobileHeader.style.display = 'none';
-            // 隐藏底部导航栏
-            var bottomNav = document.querySelector('.bottom-nav');
-            if (bottomNav) bottomNav.style.display = 'none';
-        }
-        
-        function hideHome() {
-            homePage.style.display = 'none';
-            drawer.style.display = 'block';
-            // 显示底部导航栏
-            var bottomNav = document.querySelector('.bottom-nav');
-            if (bottomNav) bottomNav.style.display = 'flex';
-        }
-        
-        // ========== 模块显示控制 ==========
-        function hideAllModules() {
-            var modulesInDrawer = drawerContent.querySelectorAll('.module');
-            for (var i = 0; i < modulesInDrawer.length - 1; i++) {
-                if (modulesInDrawer[i]) modulesInDrawer[i].style.display = 'none';
-            }
-        }
-        
-        function showModule(index) {
-            // 模块现在在 drawerContent 里，不是侧边栏了
-            var modulesInDrawer = drawerContent.querySelectorAll('.module');
-            for (var i = 0; i < modulesInDrawer.length - 1; i++) {
-                if (modulesInDrawer[i]) {
-                    modulesInDrawer[i].style.display = 'none';
+                // 手机端：隐藏侧边栏（用抽屉代替）
+                if (sidebar) {
+                    sidebar.style.display = 'none';
                 }
             }
-            if (modulesInDrawer[index]) {
-                modulesInDrawer[index].style.display = 'block';
+            
+            // 阻止抽屉内容区域的滚动冒泡到地图
+            if (drawerContent) {
+                drawerContent.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                });
+                drawerContent.addEventListener('touchmove', function(e) {
+                    e.stopPropagation();
+                });
             }
-            // 最后一个模块（结果区域）始终显示
-            if (modulesInDrawer[modulesInDrawer.length - 1]) {
-                modulesInDrawer[modulesInDrawer.length - 1].style.display = 'block';
-            }
-            // 如果是添加景点页面，同时显示景点列表模块
-            if (index === 0 && modulesInDrawer[1]) {
-                modulesInDrawer[1].style.display = 'block';
+
+            
+            // 确保底部导航可见
+            var bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) {
+                bottomNav.style.zIndex = '1000';
+                bottomNav.style.position = 'fixed';
+                bottomNav.style.bottom = '0';
             }
             
-            var title = '';
-            if (index === 0) title = '添加景点';
-            else if (index === 2) title = '路线规划';
-            else if (index === 3) title = '优化行程';
-            else if (index === 4) title = '周边搜索';
-            updateHeaderTitle(title);
+            // ========== 更新头部标题 ==========
+            function updateHeaderTitle(title) {
+                if (headerTitle) headerTitle.innerText = title;
+                if (mobileHeader) mobileHeader.style.display = 'flex';
+            }
             
-            // 不需要重新绑定事件，因为按钮是原来的DOM元素
-        }
-        
-        // ========== 抽屉拖动 ==========
-        function setDrawerState(state) {
-            drawerState = state;
-            drawer.classList.remove('collapsed', 'half', 'expanded');
-            drawer.classList.add(state);
+            // ========== 显示/隐藏首页 ==========
+            function showHome() {
+                homePage.style.display = 'block';
+                drawer.style.display = 'none';
+                if (mobileHeader) mobileHeader.style.display = 'none';
+                // 隐藏底部导航栏
+                var bottomNav = document.querySelector('.bottom-nav');
+                if (bottomNav) bottomNav.style.display = 'none';
+                // 每次显示首页时检查版本更新（添加这行）
+                setTimeout(function() {
+                    if (typeof checkAndShowUpdateNotice === 'function') {
+                        checkAndShowUpdateNotice();
+                    }
+                }, 200);
+
+            }
             
-            // 根据状态禁用/启用地图交互
-            if (state === 'expanded' || state === 'half') {
-                // 抽屉打开时，让用户专注内容，暂时禁用地图
+            function hideHome() {
+                homePage.style.display = 'none';
+                drawer.style.display = 'block';
+                // 显示底部导航栏
+                var bottomNav = document.querySelector('.bottom-nav');
+                if (bottomNav) bottomNav.style.display = 'flex';
+            }
+            
+            // ========== 模块显示控制 ==========
+            function hideAllModules() {
+                var modulesInDrawer = drawerContent.querySelectorAll('.module');
+                for (var i = 0; i < modulesInDrawer.length - 1; i++) {
+                    if (modulesInDrawer[i]) modulesInDrawer[i].style.display = 'none';
+                }
+            }
+            
+            function showModule(index) {
+                // 模块现在在 drawerContent 里，不是侧边栏了
+                var modulesInDrawer = drawerContent.querySelectorAll('.module');
+                for (var i = 0; i < modulesInDrawer.length - 1; i++) {
+                    if (modulesInDrawer[i]) {
+                        modulesInDrawer[i].style.display = 'none';
+                    }
+                }
+                if (modulesInDrawer[index]) {
+                    modulesInDrawer[index].style.display = 'block';
+                }
+                // 最后一个模块（结果区域）始终显示
+                if (modulesInDrawer[modulesInDrawer.length - 1]) {
+                    modulesInDrawer[modulesInDrawer.length - 1].style.display = 'block';
+                }
+                // 如果是添加景点页面，同时显示景点列表模块
+                if (index === 0 && modulesInDrawer[1]) {
+                    modulesInDrawer[1].style.display = 'block';
+                }
+                
+                var title = '';
+                if (index === 0) title = '添加景点';
+                else if (index === 2) title = '路线规划';
+                else if (index === 3) title = '优化行程';
+                else if (index === 4) title = '周边搜索';
+                updateHeaderTitle(title);
+                
+                // 不需要重新绑定事件，因为按钮是原来的DOM元素
+            }
+            
+            // ========== 抽屉拖动 ==========
+            function setDrawerState(state) {
+                drawerState = state;
+                drawer.classList.remove('collapsed', 'half', 'expanded');
+                drawer.classList.add(state);
+                
+                // 根据状态禁用/启用地图交互
+                if (state === 'expanded' || state === 'half') {
+                    // 抽屉打开时，让用户专注内容，暂时禁用地图
+                    if (map) {
+                        map.disableDragging();
+                    }
+                } else {
+                    // 抽屉收起时，恢复地图
+                    setTimeout(function() {
+                        if (map && drawerState === 'collapsed') {
+                            map.enableDragging();
+                        }
+                    }, 300);
+                }
+            }
+            
+            function getDrawerHeightPercent() {
+                if (drawerState === 'collapsed') return 0.12;  // 12%高度，露出把手
+                if (drawerState === 'half') return 0.45;
+                return 0.9;
+            }
+            
+            // 抽屉拖动 - 完全阻止事件冒泡到地图
+            function onTouchStart(e) {
+                // 阻止冒泡和默认行为
+                e.stopPropagation();
+                e.preventDefault();
+                
+                // 禁用地图所有交互
                 if (map) {
                     map.disableDragging();
+                    map.disableScrollWheelZoom();
+                    map.disableDoubleClickZoom();
+                    map.disablePinchToZoom();
                 }
-            } else {
-                // 抽屉收起时，恢复地图
-                setTimeout(function() {
-                    if (map && drawerState === 'collapsed') {
-                        map.enableDragging();
-                    }
-                }, 300);
+                
+                startY = e.touches[0].clientY;
+                startTransform = getDrawerHeightPercent();
+                isDragging = true;
+                drawer.style.transition = 'none';
+                
+                console.log('拖动开始');
             }
-        }
-        
-        function getDrawerHeightPercent() {
-            if (drawerState === 'collapsed') return 0.12;  // 12%高度，露出把手
-            if (drawerState === 'half') return 0.45;
-            return 0.9;
-        }
-        
-        // 抽屉拖动 - 完全阻止事件冒泡到地图
-        function onTouchStart(e) {
-            // 阻止冒泡和默认行为
-            e.stopPropagation();
-            e.preventDefault();
-            
-            // 禁用地图所有交互
-            if (map) {
-                map.disableDragging();
-                map.disableScrollWheelZoom();
-                map.disableDoubleClickZoom();
-                map.disablePinchToZoom();
-            }
-            
-            startY = e.touches[0].clientY;
-            startTransform = getDrawerHeightPercent();
-            isDragging = true;
-            drawer.style.transition = 'none';
-            
-            console.log('拖动开始');
-        }
 
-        function onTouchMove(e) {
-            if (!isDragging) return;
-            
-            // 关键：阻止冒泡和默认行为
-            e.stopPropagation();
-            e.preventDefault();
-            
-            var deltaY = startY - e.touches[0].clientY;
-            var deltaPercent = deltaY / window.innerHeight;
-            var newPercent = startTransform + deltaPercent;
-            
-            // 限制范围
-            if (newPercent < 0.12) newPercent = 0.12;      // 最小12%高度（露出把手）
-            if (newPercent > 0.9) newPercent = 0.9;        // 最大90%高度
-            
-            var translateY = (1 - newPercent) * 100;
-            drawer.style.transform = 'translateY(' + translateY + '%)';
-        }
-
-        function onTouchEnd(e) {
-            if (!isDragging) {
-                // 恢复地图
-                enableMapDragging();
-                return;
-            }
-            
-            e.stopPropagation();
-            e.preventDefault();
-            
-            isDragging = false;
-            drawer.style.transition = 'transform 0.3s ease';
-            
-            // 获取当前高度百分比
-            var transform = drawer.style.transform;
-            var percent = 1;
-            if (transform) {
-                var match = transform.match(/translateY\(([-\d.]+)%\)/);
-                if (match) {
-                    percent = 1 - parseFloat(match[1]) / 100;
-                }
-            }
-            
-            // 根据位置决定状态
-            if (percent < 0.25) setDrawerState('collapsed');
-            else if (percent < 0.65) setDrawerState('half');
-            else setDrawerState('expanded');
-            
-            // 延迟恢复地图
-            setTimeout(function() {
-                enableMapDragging();
-            }, 200);
-        }
-
-        // 恢复地图拖拽功能
-        function enableMapDragging() {
-            if (map) {
-                map.enableDragging();
-                map.enableScrollWheelZoom();
-                map.enableDoubleClickZoom();
-                map.enablePinchToZoom();
-            }
-        }     
-
-        if (handle) {
-            handle.style.touchAction = 'none';
-            
-            // 点击切换状态
-            handle.addEventListener('click', function(e) {
+            function onTouchMove(e) {
+                if (!isDragging) return;
+                
+                // 关键：阻止冒泡和默认行为
                 e.stopPropagation();
-                if (drawerState === 'collapsed') setDrawerState('half');
-                else if (drawerState === 'half') setDrawerState('expanded');
-                else setDrawerState('collapsed');
+                e.preventDefault();
+                
+                var deltaY = startY - e.touches[0].clientY;
+                var deltaPercent = deltaY / window.innerHeight;
+                var newPercent = startTransform + deltaPercent;
+                
+                // 限制范围
+                if (newPercent < 0.12) newPercent = 0.12;      // 最小12%高度（露出把手）
+                if (newPercent > 0.9) newPercent = 0.9;        // 最大90%高度
+                
+                var translateY = (1 - newPercent) * 100;
+                drawer.style.transform = 'translateY(' + translateY + '%)';
+            }
+
+            function onTouchEnd(e) {
+                if (!isDragging) {
+                    // 恢复地图
+                    enableMapDragging();
+                    return;
+                }
+                
+                e.stopPropagation();
+                e.preventDefault();
+                
+                isDragging = false;
+                drawer.style.transition = 'transform 0.3s ease';
+                
+                // 获取当前高度百分比
+                var transform = drawer.style.transform;
+                var percent = 1;
+                if (transform) {
+                    var match = transform.match(/translateY\(([-\d.]+)%\)/);
+                    if (match) {
+                        percent = 1 - parseFloat(match[1]) / 100;
+                    }
+                }
+                
+                // 根据位置决定状态
+                if (percent < 0.25) setDrawerState('collapsed');
+                else if (percent < 0.65) setDrawerState('half');
+                else setDrawerState('expanded');
+                
+                // 延迟恢复地图
+                setTimeout(function() {
+                    enableMapDragging();
+                }, 200);
+            }
+
+            // 恢复地图拖拽功能
+            function enableMapDragging() {
+                if (map) {
+                    map.enableDragging();
+                    map.enableScrollWheelZoom();
+                    map.enableDoubleClickZoom();
+                    map.enablePinchToZoom();
+                }
+            }     
+
+            if (handle) {
+                handle.style.touchAction = 'none';
+                
+                // 点击切换状态
+                handle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (drawerState === 'collapsed') setDrawerState('half');
+                    else if (drawerState === 'half') setDrawerState('expanded');
+                    else setDrawerState('collapsed');
+                });
+                
+                // 拖动
+                // handle.addEventListener('touchstart', onTouchStart, { passive: false });
+                // handle.addEventListener('touchmove', onTouchMove, { passive: false });
+                // handle.addEventListener('touchend', onTouchEnd);
+            }      
+
+            // ========== 首页卡片点击 ==========
+            homeCards.forEach(function(card) {
+                card.addEventListener('click', function() {
+                    var page = this.getAttribute('data-page');
+                    console.log('卡片点击:', page);
+                    hideHome();
+                    if (page === 'spots') showModule(0);
+                    else if (page === 'route') showModule(2);
+                    else if (page === 'optimize') showModule(3);
+                    else if (page === 'search') showModule(4);
+                    setDrawerState('half');
+                });
             });
             
-            // 拖动
-            handle.addEventListener('touchstart', onTouchStart, { passive: false });
-            handle.addEventListener('touchmove', onTouchMove, { passive: false });
-            handle.addEventListener('touchend', onTouchEnd);
-        }      
+            // 开始按钮
+            if (startBtn) {
+                startBtn.addEventListener('click', function() {
+                    console.log('开始按钮点击');
+                    hideHome();
+                    showModule(0);
+                    setDrawerState('half');
+                });
+            }
+            
+            // ========== 底部导航点击 ==========
+            navBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var page = this.getAttribute('data-page');
+                    console.log('底部导航点击:', page);
+                    hideHome();
+                    if (page === 'spots') showModule(0);
+                    else if (page === 'route') showModule(2);
+                    else if (page === 'optimize') showModule(3);
+                    else if (page === 'search') showModule(4);
+                    setDrawerState('half');
+                });
+            });
+            
+            // ========== 返回首页 ==========
+            if (backHomeBtn) {
+                backHomeBtn.addEventListener('click', function() {
+                    console.log('返回首页');
+                    showHome();
+                    setDrawerState('half');
+                });
+            }
 
-        // ========== 首页卡片点击 ==========
-        homeCards.forEach(function(card) {
-            card.addEventListener('click', function() {
-                var page = this.getAttribute('data-page');
-                console.log('卡片点击:', page);
-                hideHome();
-                if (page === 'spots') showModule(0);
-                else if (page === 'route') showModule(2);
-                else if (page === 'optimize') showModule(3);
-                else if (page === 'search') showModule(4);
-                setDrawerState('half');
-            });
-        });
-        
-        // 开始按钮
-        if (startBtn) {
-            startBtn.addEventListener('click', function() {
-                console.log('开始按钮点击');
-                hideHome();
-                showModule(0);
-                setDrawerState('half');
-            });
-        }
-        
-        // ========== 底部导航点击 ==========
-        navBtns.forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var page = this.getAttribute('data-page');
-                console.log('底部导航点击:', page);
-                hideHome();
-                if (page === 'spots') showModule(0);
-                else if (page === 'route') showModule(2);
-                else if (page === 'optimize') showModule(3);
-                else if (page === 'search') showModule(4);
-                setDrawerState('half');
-            });
-        });
-        
-        // ========== 返回首页 ==========
-        if (backHomeBtn) {
-            backHomeBtn.addEventListener('click', function() {
-                console.log('返回首页');
-                showHome();
-                setDrawerState('half');
-            });
+            // 初始化：显示首页
+            showHome();
+            setDrawerState('half');
         }
 
-        // 初始化：显示首页
-        showHome();
-        setDrawerState('half');
+        // Toast 提示函数
+        function showToast(message, duration) {
+            duration = duration || 2500;
+            var toast = document.createElement('div');
+            toast.className = 'toast-notice';
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(function() {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                }, 300);
+            }, duration);
+        }
 
-    }
+        // 检测并显示版本更新提示
+        function checkAndShowUpdateNotice() {
+            var needUpdate = localStorage.getItem('need_update_notice');
+            var versionSpan = document.getElementById('versionNumber');
+            var updateBadge = document.getElementById('updateBadge');
+            var versionInfo = document.getElementById('versionInfo');
+            
+            // 获取当前版本号
+            var APP_VERSION = '20260422.03';  // 保持和上面一致
+            
+            // 显示当前版本号
+            if (versionSpan) {
+                versionSpan.innerText = APP_VERSION;
+            }
+            
+            // 如果有更新标记
+            if (needUpdate === 'true') {
+                var oldVersion = localStorage.getItem('old_version') || '旧版本';
+                var newVersion = localStorage.getItem('new_version') || APP_VERSION;
+                
+                // 显示更新徽章
+                if (updateBadge) {
+                    updateBadge.style.display = 'inline-block';
+                    
+                    // 添加闪烁动画
+                    if (versionInfo) {
+                        versionInfo.classList.add('update-flash');
+                        setTimeout(function() {
+                            versionInfo.classList.remove('update-flash');
+                        }, 1500);
+                    }
+                    
+                    // 5秒后自动隐藏徽章
+                    setTimeout(function() {
+                        updateBadge.style.opacity = '0';
+                        updateBadge.style.transition = 'opacity 0.5s';
+                        setTimeout(function() {
+                            if (updateBadge) updateBadge.style.display = 'none';
+                            if (updateBadge) updateBadge.style.opacity = '1';
+                        }, 500);
+                    }, 5000);
+                }
+                
+                // 显示 Toast 提示
+                var toastMessage = '';
+                if (oldVersion === '首次安装') {
+                    toastMessage = '🎉 欢迎使用智能行程规划助手！';
+                } else {
+                    toastMessage = '✨ 已更新到 v' + newVersion + '，带来更好的体验！';
+                }
+                showToast(toastMessage, 3000);
+                
+                // 清除标记，下次不再显示
+                localStorage.removeItem('need_update_notice');
+                localStorage.removeItem('old_version');
+                localStorage.removeItem('new_version');
+            } else {
+                // 首次使用也显示欢迎提示（可选）
+                var firstTime = localStorage.getItem('first_time_visit');
+                if (!firstTime) {
+                    setTimeout(function() {
+                        showToast('🎉 欢迎使用智能行程规划助手！点击开始规划你的旅程吧~', 3500);
+                    }, 500);
+                    localStorage.setItem('first_time_visit', 'true');
+                }
+            }
+        }
+
+        // 手动检查更新（可选，供调试用）
+        function checkManualUpdate() {
+            showToast('当前版本 v' + localStorage.getItem('travel_app_version'), 1500);
+        }
+
     </script>
     <!-- =================================== -->
 
