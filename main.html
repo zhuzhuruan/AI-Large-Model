@@ -542,7 +542,7 @@
             }
             
             /* 固定头部 */
-            .mobile-header {
+/*            .mobile-header {
                 position: fixed;
                 top: 0;
                 left: 0;
@@ -579,7 +579,66 @@
             
             .header-placeholder {
                 width: 32px;
-            }
+            }*/
+
+            /* 顶部标题栏 - 纯白简洁风 */
+/* 顶部标题栏 - 纯白简洁风（延伸到顶部） */
+.mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    padding-top: constant(safe-area-inset-top);  /* iOS 安全区域 */
+    padding-top: env(safe-area-inset-top);        /* iOS 安全区域 */
+    z-index: 200;
+    border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    box-sizing: border-box;
+}
+
+/* 内容区域高度自适应 */
+.mobile-header {
+    height: auto;
+    min-height: 44px;
+}
+
+.header-back {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #007AFF;
+    width: 32px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.header-back:active {
+    background: rgba(0,0,0,0.05);
+}
+
+.header-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #333;
+    letter-spacing: 0;
+    line-height: 44px;
+}
+
+.header-placeholder {
+    width: 32px;
+    height: 44px;
+    flex-shrink: 0;
+}
             
             /* 抽屉面板 */
             .drawer-panel {
