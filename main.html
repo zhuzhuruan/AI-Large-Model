@@ -582,7 +582,7 @@
             }*/
 
             /* 顶部标题栏 - 纯白简洁风 */
-/* 顶部标题栏 - 纯白简洁风（延伸到顶部） */
+/* 顶部标题栏 - 延伸到状态栏 */
 .mobile-header {
     position: fixed;
     top: 0;
@@ -593,14 +593,15 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    padding-top: constant(safe-area-inset-top);  /* iOS 安全区域 */
-    padding-top: env(safe-area-inset-top);        /* iOS 安全区域 */
+    /* 关键：增加顶部内边距，适配刘海屏 */
+    padding-top: constant(safe-area-inset-top);  /* iOS 11+ */
+    padding-top: env(safe-area-inset-top);        /* iOS 11.2+ */
     z-index: 200;
     border-bottom: 0.5px solid rgba(0,0,0,0.05);
     box-sizing: border-box;
 }
 
-/* 内容区域高度自适应 */
+/* 内容区域高度固定，但整体高度自适应 */
 .mobile-header {
     height: auto;
     min-height: 44px;
@@ -924,6 +925,94 @@
             }
         }
 
+
+        /* 更新提示弹窗 */
+        .update-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .update-dialog {
+            background: white;
+            border-radius: 20px;
+            width: 280px;
+            padding: 20px;
+            text-align: center;
+            animation: dialogFadeIn 0.3s ease;
+        }
+
+        @keyframes dialogFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .update-dialog-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .update-dialog-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .update-dialog-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .update-dialog-version {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+
+        .update-dialog-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .update-dialog-btn:active {
+            background: #45a049;
+            transform: scale(0.98);
+        }
+
+        .update-dialog-later {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 12px;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+
+
+
     /* ========== 手机端样式 ========== */
 
     </style>
@@ -1197,15 +1286,22 @@
         (function() {
             var APP_VERSION = '20260422.04';  // 每次更新代码时修改这个数字
             var savedVersion = localStorage.getItem('travel_app_version');
+            
+            // 显示当前版本号（用于调试）
+            console.log('当前版本:', savedVersion, '最新版本:', APP_VERSION);
+            
             if (savedVersion !== APP_VERSION) {
-                // 记录旧版本号和新版本号，用于提示
                 var oldVersion = savedVersion || '首次安装';
                 localStorage.setItem('travel_app_version', APP_VERSION);
                 localStorage.setItem('need_update_notice', 'true');
                 localStorage.setItem('old_version', oldVersion);
                 localStorage.setItem('new_version', APP_VERSION);
-                // 刷新页面
-                window.location.reload(true);
+                
+                // 不自动刷新，而是显示更新提示
+                // window.location.reload(true);
+                
+                // 记录需要显示更新弹窗
+                localStorage.setItem('show_update_dialog', 'true');
             }
         })();
         // ====================================
@@ -4290,36 +4386,24 @@
             var versionSpan = document.getElementById('versionNumber');
             var updateBadge = document.getElementById('updateBadge');
             var versionInfo = document.getElementById('versionInfo');
+            var APP_VERSION = '20260422.04';
             
-            // 获取当前版本号
-            var APP_VERSION = '20260422.04';  // 保持和上面一致
-            
-            // 显示当前版本号
             if (versionSpan) {
                 versionSpan.innerText = APP_VERSION;
             }
             
-            // 如果有更新标记
             if (needUpdate === 'true') {
-                var oldVersion = localStorage.getItem('old_version') || '旧版本';
-                var newVersion = localStorage.getItem('new_version') || APP_VERSION;
-                
-                // 显示更新徽章
+                // 只显示徽章闪烁，弹窗由 checkForUpdate 处理
                 if (updateBadge) {
                     updateBadge.style.display = 'inline-block';
-                    
-                    // 添加闪烁动画
                     if (versionInfo) {
                         versionInfo.classList.add('update-flash');
                         setTimeout(function() {
                             versionInfo.classList.remove('update-flash');
                         }, 1500);
                     }
-                    
-                    // 5秒后自动隐藏徽章
                     setTimeout(function() {
                         updateBadge.style.opacity = '0';
-                        updateBadge.style.transition = 'opacity 0.5s';
                         setTimeout(function() {
                             if (updateBadge) updateBadge.style.display = 'none';
                             if (updateBadge) updateBadge.style.opacity = '1';
@@ -4327,28 +4411,8 @@
                     }, 5000);
                 }
                 
-                // 显示 Toast 提示
-                var toastMessage = '';
-                if (oldVersion === '首次安装') {
-                    toastMessage = '🎉 欢迎使用智能行程规划助手！';
-                } else {
-                    toastMessage = '✨ 已更新到 v' + newVersion + '，带来更好的体验！';
-                }
-                showToast(toastMessage, 3000);
-                
-                // 清除标记，下次不再显示
+                // 清除标记（避免重复处理）
                 localStorage.removeItem('need_update_notice');
-                localStorage.removeItem('old_version');
-                localStorage.removeItem('new_version');
-            } else {
-                // 首次使用也显示欢迎提示（可选）
-                var firstTime = localStorage.getItem('first_time_visit');
-                if (!firstTime) {
-                    setTimeout(function() {
-                        showToast('🎉 欢迎使用智能行程规划助手！点击开始规划你的旅程吧~', 3500);
-                    }, 500);
-                    localStorage.setItem('first_time_visit', 'true');
-                }
             }
         }
 
@@ -4357,8 +4421,68 @@
             showToast('当前版本 v' + localStorage.getItem('travel_app_version'), 1500);
         }
 
+        // 显示更新提示弹窗
+        function showUpdateDialog() {
+            // 检查是否需要显示更新弹窗
+            var needShow = localStorage.getItem('show_update_dialog');
+            if (needShow !== 'true') return;
+            
+            var newVersion = localStorage.getItem('new_version') || '最新版本';
+            var oldVersion = localStorage.getItem('old_version') || '旧版本';
+            
+            // 创建弹窗
+            var overlay = document.createElement('div');
+            overlay.className = 'update-dialog-overlay';
+            overlay.innerHTML = `
+                <div class="update-dialog">
+                    <div class="update-dialog-icon">✨</div>
+                    <div class="update-dialog-title">发现新版本</div>
+                    <div class="update-dialog-desc">行程规划助手已更新，<br>刷新后即可体验新功能</div>
+                    <div class="update-dialog-version">${oldVersion} → ${newVersion}</div>
+                    <button class="update-dialog-btn" id="updateNowBtn">立即刷新</button>
+                    <button class="update-dialog-later" id="updateLaterBtn">稍后提醒</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            
+            // 立即刷新按钮
+            document.getElementById('updateNowBtn').onclick = function() {
+                localStorage.removeItem('show_update_dialog');
+                localStorage.removeItem('need_update_notice');
+                window.location.reload(true);  // 强制刷新
+            };
+            
+            // 稍后提醒按钮
+            document.getElementById('updateLaterBtn').onclick = function() {
+                overlay.remove();
+                // 30分钟后再次提醒
+                setTimeout(function() {
+                    localStorage.setItem('show_update_dialog', 'true');
+                }, 30 * 60 * 1000);
+            };
+        }
+
+        // 检测版本更新（不自动刷新，只弹窗提示）
+        function checkForUpdate() {
+            var needUpdate = localStorage.getItem('need_update_notice');
+            if (needUpdate === 'true') {
+                showUpdateDialog();
+                localStorage.removeItem('need_update_notice');  // 避免重复弹窗
+            }
+        }
+
+        // 页面加载完成后检查更新
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (typeof checkForUpdate === 'function') {
+                    checkForUpdate();
+                }
+            }, 500);
+        });
+
     </script>
     <!-- =================================== -->
+
 
 </body>
 
