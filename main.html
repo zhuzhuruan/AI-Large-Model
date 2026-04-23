@@ -1024,6 +1024,7 @@
             max-height: 60vh;
             overflow-y: auto;
             box-shadow: 0 -2px 20px rgba(0,0,0,0.15);
+            flex-direction: column;  /* 只添加这一行 */
         }
 
         #modalOverlay {
@@ -1336,7 +1337,7 @@
         // ================================================================
         // ========== 版本自动更新检测 ==========
         (function() {
-            var APP_VERSION = '20260422.06';  // 每次更新代码时修改这个数字
+            var APP_VERSION = '20260423.01';  // 每次更新代码时修改这个数字
             var savedVersion = localStorage.getItem('travel_app_version');
             
             // 显示当前版本号（用于调试）
@@ -3064,19 +3065,49 @@
         }
 
         // 绑定事件
+        // var searchMainType = document.getElementById('searchMainType');
+        // if (searchMainType) {
+        //     // 点击下拉框时显示右侧菜单
+        //     searchMainType.onclick = function(e) {
+        //         e.stopPropagation();
+        //         var mainType = this.value;
+        //         showSubMenu(mainType);
+        //     };           
+        //     // 切换大类时重置子分类
+        //     searchMainType.onchange = function() {
+        //         selectedSubTypes = [];
+        //         restoreMainTypeDisplay();
+        //     };
+        // }
+
         var searchMainType = document.getElementById('searchMainType');
         if (searchMainType) {
-            // 点击下拉框时显示右侧菜单
-            searchMainType.onclick = function(e) {
-                e.stopPropagation();
-                var mainType = this.value;
-                showSubMenu(mainType);
-            };           
-            // 切换大类时重置子分类
-            searchMainType.onchange = function() {
-                selectedSubTypes = [];
-                restoreMainTypeDisplay();
-            };
+            if (window.innerWidth <= 768) {
+                // 手机端：点击显示底部弹窗
+                searchMainType.onclick = function(e) {
+                    e.stopPropagation();
+                    var mainType = this.value;
+                    showMobileSubMenu(mainType);
+                };
+                // 手机端：切换大类时自动弹出新的二级面板
+                searchMainType.onchange = function() {
+                    selectedSubTypes = [];
+                    updateMainTypeDisplayMobile();
+                    var mainType = this.value;
+                    showMobileSubMenu(mainType);
+                };
+            } else {
+                // PC端：保持原样
+                searchMainType.onclick = function(e) {
+                    e.stopPropagation();
+                    var mainType = this.value;
+                    showSubMenu(mainType);
+                };
+                searchMainType.onchange = function() {
+                    selectedSubTypes = [];
+                    restoreMainTypeDisplay();
+                };
+            }
         }
 
         // 显示搜索结果
@@ -4308,6 +4339,10 @@
                 var overlay = document.getElementById('modalOverlay');
                 var title = document.getElementById('mobileSubMenuTitle');
                 var container = document.getElementById('mobileSubMenuItems');
+
+                container.style.overflowY = 'auto';
+                container.style.maxHeight = '40vh';
+                container.style.flex = '1';
                 
                 if (!modal || !overlay) return;
                 
@@ -4346,7 +4381,7 @@
                 }
                 
                 // 显示弹窗
-                modal.style.display = 'block';
+                modal.style.display = 'flex';
                 overlay.style.display = 'block';
                 modal.classList.add('show');
                 
@@ -4476,7 +4511,7 @@
             var versionSpan = document.getElementById('versionNumber');
             var updateBadge = document.getElementById('updateBadge');
             var versionInfo = document.getElementById('versionInfo');
-            var APP_VERSION = '20260422.06';
+            var APP_VERSION = '20260423.01';
             
             if (versionSpan) {
                 versionSpan.innerText = APP_VERSION;
