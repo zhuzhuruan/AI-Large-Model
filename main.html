@@ -1011,7 +1011,59 @@
             cursor: pointer;
         }
 
+        /* 手机端周边搜索二级菜单弹窗 */
+        #mobileSubMenuModal {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            z-index: 10001;
+            max-height: 60vh;
+            overflow-y: auto;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.15);
+        }
 
+        #modalOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        #mobileSubMenuModal.show {
+            display: block !important;
+            animation: slideUp 0.3s ease;
+        }
+
+        .mobile-sub-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .mobile-sub-item:active {
+            background: #f0f7ff;
+        }
 
     /* ========== 手机端样式 ========== */
 
@@ -1284,7 +1336,7 @@
         // ================================================================
         // ========== 版本自动更新检测 ==========
         (function() {
-            var APP_VERSION = '20260422.05';  // 每次更新代码时修改这个数字
+            var APP_VERSION = '20260422.06';  // 每次更新代码时修改这个数字
             var savedVersion = localStorage.getItem('travel_app_version');
             
             // 显示当前版本号（用于调试）
@@ -3019,8 +3071,7 @@
                 e.stopPropagation();
                 var mainType = this.value;
                 showSubMenu(mainType);
-            };
-            
+            };           
             // 切换大类时重置子分类
             searchMainType.onchange = function() {
                 selectedSubTypes = [];
@@ -3244,8 +3295,8 @@
             searchMarkers = [];
             
             // 获取当前选中的主类型
-            var activeItem = document.querySelector('.main-type-item.active');
-            var mainType = activeItem ? activeItem.getAttribute('data-type') : 'hotel';
+            var mainTypeSelect = document.getElementById('searchMainType');
+            var mainType = mainTypeSelect ? mainTypeSelect.value : 'hotel';
             
             // 获取搜索关键词列表（支持多选）
             var mainTypeData = categoryMap[mainType];
@@ -3777,130 +3828,6 @@
             };
 
             // ========== 中心点选择逻辑 ==========
-            // var isPickingLocation = false; // 是否处于地图选点模式
-            // var currentPickedMarker = null; // 当前选中的临时标记
-
-            // // 获取页面元素
-            // var searchCenterSpot = document.getElementById('searchCenterSpot');
-            // var startMapPickBtn = document.getElementById('startMapPickBtn');
-            // var selectedPointInfoSpan = document.getElementById('selectedPointInfo');
-
-            // // 1. 从景点选择
-            // if (searchCenterSpot) {
-            //     // 当切换景点时，清除地图选点状态和坐标
-            //     searchCenterSpot.addEventListener('change', function() {
-            //         if (this.value) {
-            //             // 如果处于选点模式，先关闭
-            //             if (isPickingLocation) {
-            //                 isPickingLocation = false;
-            //                 if (startMapPickBtn) {
-            //                     startMapPickBtn.textContent = '📍 地图选点';
-            //                     startMapPickBtn.style.background = '#2196F3';
-            //                 }
-            //                 // 清除临时标记
-            //                 if (currentPickedMarker) {
-            //                     map.removeOverlay(currentPickedMarker);
-            //                     currentPickedMarker = null;
-            //                 }
-            //                 // 清除提示信息
-            //                 if (selectedPointInfoSpan) {
-            //                     selectedPointInfoSpan.innerHTML = '';
-            //                     selectedPointInfoSpan.style.display = 'none';
-            //                 }
-            //             }
-            //             // 更新地图视野到所选景点
-            //             var selectedIdx = parseInt(this.value);
-            //             var spot = markersData[selectedIdx];
-            //             if (spot) {
-            //                 map.centerAndZoom(new BMap.Point(spot.lng, spot.lat), 14);
-            //                 // 同时记录为中心点
-            //                 currentSearchCenter = new BMap.Point(spot.lng, spot.lat);
-            //                 if (selectedPointInfoSpan) {
-            //                     selectedPointInfoSpan.innerHTML = '📍 已选点: ' + spot.lng.toFixed(6) + ', ' + spot.lat.toFixed(6);
-            //                     selectedPointInfoSpan.style.display = 'block';
-            //                     selectedPointInfoSpan.style.color = '#4CAF50';
-            //                 }
-            //             }
-            //         } else {
-            //             // 未选择景点时，清空中心点
-            //             currentSearchCenter = null;
-            //             if (selectedPointInfoSpan) {
-            //                 selectedPointInfoSpan.innerHTML = '';
-            //                 selectedPointInfoSpan.style.display = 'none';
-            //             }
-            //         }
-            //     });
-            //     // 初始加载景点列表
-            //     if (typeof updateSearchCenterSpotSelect === 'function') {
-            //         updateSearchCenterSpotSelect();
-            //     }
-            // }
-
-            // // 2. 地图选点按钮
-            // if (startMapPickBtn) {
-            //     startMapPickBtn.addEventListener('click', function() {
-            //         if (isPickingLocation) {
-            //             // 关闭选点模式，清除标记和提示
-            //             isPickingLocation = false;
-            //             startMapPickBtn.textContent = '📍 地图选点';
-            //             startMapPickBtn.style.background = '#2196F3';
-                        
-            //             // 清除临时标记
-            //             if (currentPickedMarker) {
-            //                 map.removeOverlay(currentPickedMarker);
-            //                 currentPickedMarker = null;
-            //             }
-                        
-            //             // 清除提示信息（但保留已选点信息）
-            //             // 注意：不清除已选点信息，只清除选点模式提示
-            //             if (selectedPointInfoSpan && selectedPointInfoSpan.innerHTML.indexOf('请在地图上点击') !== -1) {
-            //                 selectedPointInfoSpan.innerHTML = '';
-            //                 selectedPointInfoSpan.style.display = 'none';
-            //             }
-            //         } else {
-            //             // 开启选点模式
-            //             isPickingLocation = true;
-            //             startMapPickBtn.textContent = '✨ 选点模式中...';
-            //             startMapPickBtn.style.background = '#FF9800';
-                        
-            //             if (selectedPointInfoSpan) {
-            //                 selectedPointInfoSpan.innerHTML = '⏳ 请在地图上点击选择中心点';
-            //                 selectedPointInfoSpan.style.display = 'block';
-            //                 selectedPointInfoSpan.style.color = '#FF9800';
-            //             }
-            //         }
-            //     });
-            // }
-
-            // // 3. 地图点击事件（配合选点模式）
-            // map.addEventListener('click', function(e) {
-            //     if (isPickingLocation) {
-            //         // 记录选中的点
-            //         currentSearchCenter = e.point;
-            //         var lng = e.point.lng.toFixed(6);
-            //         var lat = e.point.lat.toFixed(6);
-                    
-            //         // 显示提示信息
-            //         if (selectedPointInfoSpan) {
-            //             selectedPointInfoSpan.innerHTML = '📍 已选点: ' + lng + ', ' + lat;
-            //             selectedPointInfoSpan.style.display = 'block';
-            //             selectedPointInfoSpan.style.color = '#4CAF50';
-            //         }
-                    
-            //         // 清除之前的临时标记
-            //         if (currentPickedMarker) {
-            //             map.removeOverlay(currentPickedMarker);
-            //         }
-                    
-            //         // 添加新的临时标记（不自动消失）
-            //         currentPickedMarker = new BMap.Marker(e.point);
-            //         map.addOverlay(currentPickedMarker);
-                    
-            //         // 注意：不关闭选点模式，标记和提示一直保留
-            //     }
-            // });
-
-            // ========== 中心点选择逻辑 ==========
             var searchCenterSpot = document.getElementById('searchCenterSpot');
             var startMapPickBtn = document.getElementById('startMapPickBtn');
             var selectedPointInfoSpan = document.getElementById('selectedPointInfo');
@@ -4102,8 +4029,7 @@
                     e.stopPropagation();
                 });
             }
-
-            
+         
             // 确保底部导航可见
             var bottomNav = document.querySelector('.bottom-nav');
             if (bottomNav) {
@@ -4178,9 +4104,26 @@
                 else if (index === 4) title = '周边搜索';
                 updateHeaderTitle(title);
                 
-                // 不需要重新绑定事件，因为按钮是原来的DOM元素
+                // ========== 新增：如果是周边搜索模块，重新绑定下拉框事件 ==========
+                if (index === 4) {
+                    setTimeout(function() {
+                        var searchSelect = document.getElementById('searchMainType');
+                        if (searchSelect) {
+                            // 移除旧事件
+                            searchSelect.onclick = null;
+                            // 绑定新事件
+                            searchSelect.onclick = function(e) {
+                                if (e) e.stopPropagation();
+                                var mainType = this.value;
+                                console.log('周边搜索下拉框被点击:', mainType);
+                                showMobileSubMenu(mainType);
+                            };
+                            console.log('周边搜索事件已重新绑定');
+                        }
+                    }, 200);
+                }
             }
-            
+
             // ========== 抽屉拖动 ==========
             function setDrawerState(state) {
                 drawerState = state;
@@ -4358,6 +4301,153 @@
                 });
             }
 
+            // ========== 手机端周边搜索二级菜单 ==========
+            function showMobileSubMenu(mainType) {
+                var mainTypeData = categoryMap[mainType];
+                var modal = document.getElementById('mobileSubMenuModal');
+                var overlay = document.getElementById('modalOverlay');
+                var title = document.getElementById('mobileSubMenuTitle');
+                var container = document.getElementById('mobileSubMenuItems');
+                
+                if (!modal || !overlay) return;
+                
+                title.innerHTML = mainTypeData.icon + ' ' + mainTypeData.name + '分类（可多选）';
+                
+                // 生成选项
+                var html = '';
+                for (var i = 0; i < mainTypeData.subTypes.length; i++) {
+                    var sub = mainTypeData.subTypes[i];
+                    var isChecked = selectedSubTypes.includes(sub.value);
+                    html += '<div class="mobile-sub-item" data-value="' + sub.value + '" data-label="' + sub.label + '">';
+                    html += '<span style="font-size: 14px;">' + sub.label + '</span>';
+                    html += '<span style="color: #2196F3; font-size: 18px;">' + (isChecked ? '✓' : '○') + '</span>';
+                    html += '</div>';
+                }
+                container.innerHTML = html;
+                
+                // 绑定点击事件
+                var items = container.querySelectorAll('.mobile-sub-item');
+                for (var i = 0; i < items.length; i++) {
+                    items[i].onclick = function() {
+                        var value = this.getAttribute('data-value');
+                        var checkSpan = this.querySelector('span:last-child');
+                        
+                        if (selectedSubTypes.includes(value)) {
+                            var index = selectedSubTypes.indexOf(value);
+                            selectedSubTypes.splice(index, 1);
+                            checkSpan.innerHTML = '○';
+                            this.style.background = '';
+                        } else {
+                            selectedSubTypes.push(value);
+                            checkSpan.innerHTML = '✓';
+                            this.style.background = '#f0f7ff';
+                        }
+                    };
+                }
+                
+                // 显示弹窗
+                modal.style.display = 'block';
+                overlay.style.display = 'block';
+                modal.classList.add('show');
+                
+                // 确认按钮 - 使用 getElementById 并重新绑定
+                var confirmBtn = document.getElementById('confirmSubMenuBtn');
+                if (confirmBtn) {
+                    // 移除旧事件，避免重复绑定
+                    var newConfirmBtn = confirmBtn.cloneNode(true);
+                    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+                    newConfirmBtn.onclick = function() {
+                        updateMainTypeDisplayMobile();
+                        closeMobileSubMenu();
+                    };
+                }
+                
+                // 清空按钮
+                var clearBtn = document.getElementById('clearSubMenuBtn');
+                if (clearBtn) {
+                    var newClearBtn = clearBtn.cloneNode(true);
+                    clearBtn.parentNode.replaceChild(newClearBtn, clearBtn);
+                    newClearBtn.onclick = function() {
+                        selectedSubTypes = [];
+                        updateMainTypeDisplayMobile();
+                        closeMobileSubMenu();
+                        // 重新打开以刷新显示
+                        setTimeout(function() {
+                            showMobileSubMenu(mainType);
+                        }, 100);
+                    };
+                }
+                
+                // 关闭按钮（X）
+                var closeBtn = document.getElementById('closeSubMenuBtn');
+                if (closeBtn) {
+                    var newCloseBtn = closeBtn.cloneNode(true);
+                    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+                    newCloseBtn.onclick = function() {
+                        closeMobileSubMenu();
+                    };
+                }
+                
+                // 点击遮罩层关闭
+                overlay.onclick = function() {
+                    closeMobileSubMenu();
+                };
+            }
+
+            function closeMobileSubMenu() {
+                var modal = document.getElementById('mobileSubMenuModal');
+                var overlay = document.getElementById('modalOverlay');
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                }
+                if (overlay) overlay.style.display = 'none';
+            }
+
+            function updateMainTypeDisplayMobile() {
+                var select = document.getElementById('searchMainType');
+                if (!select) return;
+                var mainType = select.value;
+                var mainTypeData = categoryMap[mainType];
+                
+                if (selectedSubTypes.length > 0) {
+                    var selectedLabels = [];
+                    for (var i = 0; i < selectedSubTypes.length; i++) {
+                        for (var j = 0; j < mainTypeData.subTypes.length; j++) {
+                            if (mainTypeData.subTypes[j].value === selectedSubTypes[i]) {
+                                selectedLabels.push(mainTypeData.subTypes[j].label);
+                                break;
+                            }
+                        }
+                    }
+                    var option = select.options[select.selectedIndex];
+                    var displayText = selectedLabels.join('、');
+                    if (displayText.length > 20) {
+                        displayText = displayText.substring(0, 18) + '...';
+                    }
+                    option.text = mainTypeData.icon + ' ' + displayText;
+                } else {
+                    var option = select.options[select.selectedIndex];
+                    option.text = mainTypeData.icon + ' ' + mainTypeData.name;
+                }
+            }
+
+            // ========== 延迟绑定周边搜索事件 ==========
+            setTimeout(function() {
+                var searchSelect = document.getElementById('searchMainType');
+                if (searchSelect) {
+                    searchSelect.onclick = null;
+                    searchSelect.onclick = function(e) {
+                        if (e) e.stopPropagation();
+                        var mainType = this.value;
+                        console.log('延迟绑定触发了:', mainType);
+                        showMobileSubMenu(mainType);
+                    };
+                    console.log('延迟绑定周边搜索事件完成');
+                }
+            }, 1000);
+
+
             // 初始化：显示首页
             showHome();
             setDrawerState('half');
@@ -4386,7 +4476,7 @@
             var versionSpan = document.getElementById('versionNumber');
             var updateBadge = document.getElementById('updateBadge');
             var versionInfo = document.getElementById('versionInfo');
-            var APP_VERSION = '20260422.05';
+            var APP_VERSION = '20260422.06';
             
             if (versionSpan) {
                 versionSpan.innerText = APP_VERSION;
@@ -4481,6 +4571,22 @@
         });
 
     </script>
+
+    <!-- 手机端周边搜索二级菜单弹窗 -->
+    <div id="mobileSubMenuModal">
+        <div style="padding: 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 16px; font-weight: 600;" id="mobileSubMenuTitle">美食分类</span>
+            <button id="closeSubMenuBtn" style="background: none; border: none; font-size: 24px; cursor: pointer; padding: 0 8px;">✕</button>
+        </div>
+        <div id="mobileSubMenuItems" style="padding: 0 16px;">
+            <!-- 动态生成多选选项 -->
+        </div>
+        <div style="padding: 16px; border-top: 1px solid #eee; display: flex; gap: 12px;">
+            <button id="confirmSubMenuBtn" style="flex: 1; background: #2196F3; color: white; border: none; padding: 12px; border-radius: 25px; font-size: 15px; cursor: pointer;">确认选择</button>
+            <button id="clearSubMenuBtn" style="flex: 1; background: #f5f5f5; color: #666; border: none; padding: 12px; border-radius: 25px; font-size: 15px; cursor: pointer;">清空</button>
+        </div>
+    </div>
+    <div id="modalOverlay"></div>
     <!-- =================================== -->
 
 
