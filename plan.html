@@ -1,0 +1,1708 @@
+<script>
+    // 获取 AK
+    var browserAk = localStorage.getItem('baidu_browser_ak');
+    var serverAk = localStorage.getItem('baidu_server_ak');
+
+    if (!browserAk || !serverAk) {
+        // 没有配置AK，跳转到配置页
+        window.location.href = 'index.html';
+    }
+</script>
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>我的行程攻略</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            padding-bottom: 20px;
+        }
+        
+        /* 头部导航 */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            z-index: 100;
+            padding-top: constant(safe-area-inset-top);
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .header-back {
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            margin: -8px;
+            color: #007AFF;
+        }
+        
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .header-btn {
+            font-size: 14px;
+            color: #007AFF;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+        }
+        
+        /* 行程列表 */
+        .trip-list {
+            padding: 80px 16px 20px;
+        }
+        
+        .trip-card {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .trip-card:active {
+            transform: scale(0.98);
+        }
+        
+        .trip-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .trip-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        
+        .trip-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .add-trip-btn {
+            background: white;
+            border: 1px dashed #ccc;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        /* 行程详情页 */
+        .detail-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #f5f5f5;
+            z-index: 200;
+            overflow-y: auto;
+        }
+        
+        .detail-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            z-index: 10;
+            padding-top: constant(safe-area-inset-top);
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .detail-back {
+            font-size: 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            margin: -8px;
+            color: #007AFF;
+        }
+        
+        .detail-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .detail-content {
+            padding: 16px;
+        }
+        
+        /* 每日行程卡片 */
+        .day-card {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        
+        .day-header {
+            padding: 16px;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .day-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .day-stats {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .day-content {
+            display: none;
+            padding: 0 16px;
+        }
+        
+        .day-content.open {
+            display: block;
+        }
+        
+        /* 景点卡片 */
+        .spot-card {
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: grab;
+            transition: background 0.2s;
+        }
+        
+        .spot-card:active {
+            cursor: grabbing;
+        }
+        
+        .spot-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        
+        .spot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .spot-name {
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .drag-handle {
+            color: #ccc;
+            font-size: 16px;
+            cursor: grab;
+        }
+        
+        .spot-time {
+            font-size: 12px;
+            color: #666;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+        
+        .spot-detail {
+            font-size: 13px;
+            color: #666;
+            margin-top: 8px;
+            padding-left: 24px;
+        }
+        
+        .transport-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .transport-icon {
+            font-size: 16px;
+        }
+        
+        .transport-select {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            font-size: 12px;
+        }
+        
+        .transport-time {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .edit-icon {
+            color: #999;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .expand-icon {
+            color: #999;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .spot-note {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 按钮 */
+        .add-day-btn {
+            background: white;
+            border: 1px dashed #ccc;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+        
+        /* 编辑弹窗 */
+        .edit-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .edit-modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 300px;
+            max-width: 90%;
+            padding: 20px;
+        }
+        
+        .edit-modal-content input,
+        .edit-modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .edit-modal-content textarea {
+            resize: none;
+            height: 80px;
+        }
+        
+        .edit-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .edit-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .save-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .cancel-btn {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            padding: 8px 0;
+            z-index: 100;
+        }
+        
+        .bottom-nav .nav-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #8e8e93;
+            font-size: 10px;
+        }
+        
+        .bottom-nav .nav-btn.active {
+            color: #007AFF;
+        }
+        
+        .bottom-nav .nav-btn::before {
+            content: attr(data-icon);
+            font-size: 22px;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        /* 编辑模式样式 */
+        .edit-mode .trip-card {
+            padding-left: 16px;
+        }
+
+        .trip-checkbox {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #2196F3;
+        }
+
+        .edit-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #eee;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .edit-bar .count {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .edit-bar .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .edit-bar .cancel-btn {
+            background: #f5f5f5;
+            color: #666;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .edit-bar .select-all {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+    </style>
+
+</head>
+<body>
+    <!-- 行程列表页 -->
+    <div id="listPage">
+        <div class="header">
+            <button class="header-back" id="backToMainBtn">←</button>
+            <span class="header-title">我的攻略</span>
+            <div style="display: flex; gap: 8px;">
+                <button class="header-btn" id="addTripBtn">+ 新建</button>
+                <button class="header-btn" id="manageBtn">管理</button>
+            </div>
+        </div>
+        <div id="tripListContainer" class="trip-list">
+            <!-- 动态生成行程列表 -->
+        </div>
+    </div>
+    
+    <!-- 行程详情页 -->
+    <div id="detailPage" class="detail-page">
+        <div class="detail-header">
+            <button class="detail-back" id="backToListBtn">←</button>
+            <span class="detail-title" id="detailTitle">行程详情</span>
+            <button class="header-btn" id="editTripNameBtn">编辑</button>
+        </div>
+        <div id="detailContent" class="detail-content">
+            <!-- 动态生成每日行程 -->
+        </div>
+    </div>
+
+    <script>
+    // 当前选中的行程ID
+    var currentTripId = null;
+    var map = null;  // 地图实例
+    
+    // 获取所有行程
+    function getTrips() {
+        return JSON.parse(localStorage.getItem('travelTrips') || '[]');
+    }
+
+    // 获取 main.html 中保存的景点列表
+    function getAvailableSpots() {
+        var spots = localStorage.getItem('travelSpots');
+        if (spots) {
+            try {
+                return JSON.parse(spots);
+            } catch(e) {
+                return [];
+            }
+        }
+        return [];
+    }
+
+    // 显示添加景点弹窗
+    function showAddSpotDialog(dayIndex) {
+        var availableSpots = getAvailableSpots();
+        
+        if (availableSpots.length === 0) {
+            alert('暂无景点，请先在首页添加景点');
+            return;
+        }
+        
+        // 构建弹窗HTML
+        var dialogHtml = '<div id="addSpotOverlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:20000;display:flex;align-items:center;justify-content:center;">';
+        dialogHtml += '<div style="background:white;border-radius:16px;width:300px;max-width:90%;padding:20px;max-height:80vh;overflow-y:auto;">';
+        dialogHtml += '<h3 style="margin:0 0 16px 0;">选择景点</h3>';
+        
+        for (var i = 0; i < availableSpots.length; i++) {
+            var spot = availableSpots[i];
+            dialogHtml += '<div class="spot-option" data-name="' + spot.name.replace(/'/g, "\\'") + '" data-lat="' + spot.lat + '" data-lng="' + spot.lng + '" style="padding:12px;border-bottom:1px solid #eee;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">';
+            dialogHtml += '<span>📍 ' + spot.name + '</span>';
+            dialogHtml += '<span style="color:#4CAF50;">+ 添加</span>';
+            dialogHtml += '</div>';
+        }
+        
+        dialogHtml += '<div style="margin-top:16px;display:flex;gap:12px;">';
+        dialogHtml += '<button id="cancelAddSpot" style="flex:1;background:#f5f5f5;border:none;padding:10px;border-radius:8px;cursor:pointer;">取消</button>';
+        dialogHtml += '</div>';
+        dialogHtml += '</div></div>';
+        
+        document.body.insertAdjacentHTML('beforeend', dialogHtml);
+        
+        // 绑定点击事件
+        var options = document.querySelectorAll('.spot-option');
+        for (var i = 0; i < options.length; i++) {
+            options[i].onclick = function() {
+                var name = this.getAttribute('data-name');
+                var lat = parseFloat(this.getAttribute('data-lat'));
+                var lng = parseFloat(this.getAttribute('data-lng'));
+                
+                addSpotToDay(dayIndex, name, lat, lng);
+                document.getElementById('addSpotOverlay').remove();
+            };
+        }
+        
+        document.getElementById('cancelAddSpot').onclick = function() {
+            document.getElementById('addSpotOverlay').remove();
+        };
+    }
+
+    // 删除景点
+    function deleteSpot(spotId, dayIndex, spotName) {
+        if (confirm('确定要删除景点 "' + spotName + '" 吗？')) {
+            var detail = getTripDetail(currentTripId);
+            var day = detail.days[dayIndex];
+            
+            if (day) {
+                // 找到要删除的景点索引
+                var spotIndex = -1;
+                for (var i = 0; i < day.spots.length; i++) {
+                    if (day.spots[i].id === spotId) {
+                        spotIndex = i;
+                        break;
+                    }
+                }
+                
+                if (spotIndex !== -1) {
+                    // 删除景点
+                    day.spots.splice(spotIndex, 1);
+                    
+                    // 如果删除后还有景点，修复交通方式链
+                    if (day.spots.length > 0) {
+                        // 删除后，前一个景点的交通方式指向下一个景点
+                        if (spotIndex > 0 && spotIndex < day.spots.length) {
+                            // 更新前一个景点的交通方式
+                            var prevSpot = day.spots[spotIndex - 1];
+                            if (prevSpot.transportToNext) {
+                                prevSpot.transportToNext = {
+                                    mode: 'driving',
+                                    duration: 0,
+                                    distance: null,
+                                    steps: null
+                                };
+                            }
+                        }
+                    }
+                    
+                    saveTripDetail(currentTripId, detail);
+                    renderDetailContent(detail);
+                    showToast('已删除: ' + spotName);
+                }
+            }
+        }
+    }
+
+    // 删除天数
+    function deleteDay(dayIndex) {
+        var dayNumber = dayIndex + 1;
+        if (confirm('确定要删除第 ' + dayNumber + ' 天吗？该天内的所有景点也会被删除。')) {
+            var detail = getTripDetail(currentTripId);
+            detail.days.splice(dayIndex, 1);
+            
+            // 重新编号
+            for (var i = 0; i < detail.days.length; i++) {
+                detail.days[i].day = i + 1;
+            }
+            
+            saveTripDetail(currentTripId, detail);
+            renderDetailContent(detail);
+            showToast('已删除第 ' + dayNumber + ' 天');
+        }
+    }
+
+    // 添加景点到指定天数
+    function addSpotToDay(dayIndex, name, lat, lng) {
+        var detail = getTripDetail(currentTripId);
+        var day = detail.days[dayIndex];
+        
+        if (!day) {
+            alert('天数不存在');
+            return;
+        }
+        
+        // 创建新景点
+        var newSpotId = 'spot_' + Date.now() + '_' + Math.random();
+        var newSpot = {
+            id: newSpotId,
+            name: name,
+            lat: lat,
+            lng: lng,
+            arrivalTime: '10:00',
+            duration: 120,
+            cost: 0,
+            note: '',
+            transportToNext: {
+                mode: 'driving',
+                duration: 0,
+                distance: null,
+                steps: null
+            }
+        };
+        
+        // 添加到景点列表末尾
+        day.spots.push(newSpot);
+        
+        // 如果有上一个景点，初始化交通方式（设为驾车，具体路线稍后自动获取）
+        if (day.spots.length > 1) {
+            var prevSpot = day.spots[day.spots.length - 2];
+            if (!prevSpot.transportToNext) {
+                prevSpot.transportToNext = {
+                    mode: 'driving',
+                    duration: 0,
+                    distance: null,
+                    steps: null
+                };
+            }
+        }
+        
+        saveTripDetail(currentTripId, detail);
+        
+        // 重新渲染详情页面
+        renderDetailContent(detail);
+        
+        // 延迟后，自动触发新交通方式的路线获取
+        setTimeout(function() {
+            var transportSelects = document.querySelectorAll('.transport-select');
+            // 触发最后一个 select（新添加的交通方式）
+            if (transportSelects.length > 0) {
+                var lastSelect = transportSelects[transportSelects.length - 1];
+                if (lastSelect && lastSelect.onchange) {
+                    console.log('自动获取路线:', lastSelect.getAttribute('data-spot-id'));
+                    lastSelect.onchange();
+                }
+            }
+        }, 300);
+        
+        showToast('已添加景点: ' + name);
+    }
+
+    // 简单提示函数
+    function showToast(message) {
+        var toast = document.createElement('div');
+        toast.innerHTML = message;
+        toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:white;padding:8px 16px;border-radius:30px;font-size:13px;z-index:20001;';
+        document.body.appendChild(toast);
+        setTimeout(function() {
+            toast.remove();
+        }, 2000);
+    }
+    
+    // 获取行程详情
+    function getTripDetail(tripId) {
+        return JSON.parse(localStorage.getItem('trip_detail_' + tripId) || '{"days":[]}');
+    }
+    
+    // 保存行程详情
+    function saveTripDetail(tripId, detail) {
+        localStorage.setItem('trip_detail_' + tripId, JSON.stringify(detail));
+    }
+    
+    // 保存行程列表
+    function saveTrips(trips) {
+        localStorage.setItem('travelTrips', JSON.stringify(trips));
+    }
+    
+    // 获取路线详情（模拟数据版本，不依赖网络请求）
+    function fetchRouteDetail(origin, destination, mode, callback) {
+        // 计算直线距离（粗略估算）
+        function getDistance(lat1, lng1, lat2, lng2) {
+            var rad = Math.PI / 180;
+            var dlat = (lat2 - lat1) * rad;
+            var dlng = (lng2 - lng1) * rad;
+            var a = Math.sin(dlat / 2) ** 2 +
+                    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) *
+                    Math.sin(dlng / 2) ** 2;
+            return 6371 * 2 * Math.asin(Math.sqrt(a));
+        }
+        
+        var distance = getDistance(origin.lat, origin.lng, destination.lat, destination.lng);
+        var duration = Math.round(distance * (mode === 'walking' ? 12 : (mode === 'transit' ? 3 : 2)));
+        if (duration < 1) duration = 1;
+        
+        var steps = [];
+        var modeName = mode === 'walking' ? '步行' : (mode === 'transit' ? '公交/地铁' : '驾车');
+        
+        if (mode === 'walking') {
+            steps.push(`从起点向${Math.random() > 0.5 ? '东' : '西'}方向步行约${Math.round(distance * 1000)}米`);
+            steps.push(`到达${destination.name || '目的地'}`);
+        } else if (mode === 'transit') {
+            steps.push(`步行至附近公交站/地铁站`);
+            steps.push(`乘坐${Math.random() > 0.5 ? '地铁' : '公交'}，约${duration}分钟`);
+            steps.push(`到达后步行至${destination.name || '目的地'}`);
+        } else {
+            steps.push(`沿主要道路行驶${distance.toFixed(1)}公里`);
+            steps.push(`预计${duration}分钟到达${destination.name || '目的地'}`);
+        }
+        
+        callback({
+            success: true,
+            distance: distance.toFixed(1),
+            duration: duration,
+            steps: steps
+        });
+    }
+    
+    // 渲染行程列表
+    function renderTripList() {
+        var trips = getTrips();
+        var container = document.getElementById('tripListContainer');
+        
+        if (trips.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><p>暂无攻略</p><p style="font-size:12px">在行程规划页面保存景点即可创建攻略</p></div>';
+            return;
+        }
+        
+        var html = '';
+        for (var i = 0; i < trips.length; i++) {
+            var trip = trips[i];
+            var detail = getTripDetail(trip.id);
+            var totalSpots = 0;
+            for (var j = 0; j < detail.days.length; j++) {
+                totalSpots += detail.days[j].spots.length;
+            }
+            
+            if (isEditMode) {
+                // 编辑模式：显示复选框 + 重命名图标
+                html += '<div class="trip-card" data-id="' + trip.id + '" style="display:flex; align-items:center;">';
+                html += '<input type="checkbox" class="trip-checkbox" data-trip-id="' + trip.id + '" style="width:20px;height:20px;margin-right:12px;">';
+                html += '<div style="flex:1;">';
+                html += '<div class="trip-name" style="display:flex; justify-content:space-between; align-items:center;">';
+                html += '<span>' + trip.name + '</span>';
+                html += '<div style="display:flex; gap:8px; align-items:center;">';
+                html += '<span style="font-size:12px;color:#999;">' + detail.days.length + '天</span>';
+                html += '<span class="rename-trip-in-edit" data-trip-id="' + trip.id + '" data-trip-name="' + trip.name.replace(/'/g, "\\'") + '" style="cursor:pointer; color:#2196F3; font-size:14px;">✏️</span>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div class="trip-date">📅 ' + trip.startDate + '</div>';
+                html += '<div class="trip-stats">📍 ' + totalSpots + '个景点</div>';
+                html += '</div>';
+                html += '</div>';
+            } else {
+                html += '<div class="trip-card" data-id="' + trip.id + '">';
+                html += '<div class="trip-name" style="display:flex; justify-content:space-between; align-items:center;">';
+                html += '<span>' + trip.name + '</span>';
+                html += '<span style="font-size:12px;color:#999;">' + detail.days.length + '天</span>';
+                html += '</div>';
+                html += '<div class="trip-date">📅 ' + trip.startDate + '</div>';
+                html += '<div class="trip-stats">📍 ' + totalSpots + '个景点</div>';
+                html += '</div>';
+            }
+        }
+        container.innerHTML = html;
+
+        // ========== 绑定重命名按钮（添加在这里） ==========
+        var renameBtnsInEdit = document.querySelectorAll('.rename-trip-in-edit');
+        for (var i = 0; i < renameBtnsInEdit.length; i++) {
+            renameBtnsInEdit[i].onclick = function(e) {
+                e.stopPropagation();
+                var tripId = this.getAttribute('data-trip-id');
+                var tripName = this.getAttribute('data-trip-name');
+                renameTrip(tripId, tripName);
+            };
+        }
+        
+        // 绑定卡片点击事件（非编辑模式）
+        if (!isEditMode) {
+            var cards = document.querySelectorAll('.trip-card');
+            for (var i = 0; i < cards.length; i++) {
+                cards[i].onclick = function() {
+                    currentTripId = this.getAttribute('data-id');
+                    showTripDetail(currentTripId);
+                };
+            }
+        } else {
+            // 绑定复选框事件
+            var checkboxes = document.querySelectorAll('.trip-checkbox');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].onclick = function(e) {
+                    e.stopPropagation();
+                    var tripId = this.getAttribute('data-trip-id');
+                    if (this.checked) {
+                        if (selectedTripIds.indexOf(tripId) === -1) selectedTripIds.push(tripId);
+                    } else {
+                        var index = selectedTripIds.indexOf(tripId);
+                        if (index !== -1) selectedTripIds.splice(index, 1);
+                    }
+                    updateSelectedCount();
+                };
+            }
+        }
+    }
+    
+    // 新建行程
+    function createNewTrip() {
+        var name = prompt('请输入行程名称', '新行程');
+        if (!name) return;
+        var newId = 'trip_' + Date.now();
+        var newTrip = {
+            id: newId,
+            name: name,
+            startDate: new Date().toISOString().split('T')[0],
+            createdAt: new Date().toISOString(),
+            coverImage: ''
+        };
+        var newDetail = {
+            id: newId,
+            name: name,
+            startDate: new Date().toISOString().split('T')[0],
+            days: []
+        };
+        var trips = getTrips();
+        trips.push(newTrip);
+        saveTrips(trips);
+        saveTripDetail(newId, newDetail);
+        renderTripList();
+    }
+
+    // 重命名行程
+    function renameTrip(tripId, oldName) {
+        var newName = prompt('请输入新的行程名称', oldName);
+        if (newName && newName.trim()) {
+            newName = newName.trim();
+            
+            var trips = getTrips();
+            for (var i = 0; i < trips.length; i++) {
+                if (trips[i].id === tripId) {
+                    trips[i].name = newName;
+                    break;
+                }
+            }
+            saveTrips(trips);
+            
+            var detail = getTripDetail(tripId);
+            detail.name = newName;
+            saveTripDetail(tripId, detail);
+            
+            if (currentTripId === tripId) {
+                document.getElementById('detailTitle').innerText = newName;
+            }
+            
+            // 刷新列表（保持编辑模式）
+            renderTripList();
+            showToast('已重命名为: ' + newName);
+        }
+    }
+
+    // 获取步行详情的函数
+    function fetchWalkDetail(walkKey, detailDiv) {
+        var walkData = window.walkPointsData[walkKey];
+        if (!walkData) {
+            detailDiv.innerHTML = '无步行指引数据';
+            return;
+        }
+        
+        var ak = serverAk;
+        var url = `https://api.map.baidu.com/direction/v2/walking?origin=${walkData.start.lat},${walkData.start.lng}&destination=${walkData.end.lat},${walkData.end.lng}&ak=${ak}&output=json`;
+        var callbackName = 'walkDetail_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+        url += '&callback=' + callbackName;
+        
+        window[callbackName] = function(data) {
+            if (data.status === 0 && data.result && data.result.routes && data.result.routes.length > 0) {
+                var steps = data.result.routes[0].steps;
+                var html = '';
+                for (var i = 0; i < steps.length; i++) {
+                    var instruction = steps[i].instructions || '';
+                    instruction = instruction.replace(/<[^>]+>/g, '');
+                    html += '<div style="margin:4px 0;">' + (i + 1) + '. ' + instruction + '</div>';
+                }
+                detailDiv.innerHTML = html;
+            } else {
+                detailDiv.innerHTML = '获取步行指引失败';
+            }
+            delete window[callbackName];
+        };
+        
+        var script = document.createElement('script');
+        script.src = url;
+        script.onerror = function() {
+            detailDiv.innerHTML = '网络错误';
+            delete window[callbackName];
+        };
+        document.head.appendChild(script);
+    }
+
+    // 获取时间格式转换
+    function formatDuration(minutes) {
+        if (!minutes || minutes === 0) return '0分钟';
+        if (minutes >= 60) {
+            var hours = (minutes / 60).toFixed(1);
+            return hours + '小时';
+        }
+        return minutes + '分钟';
+    }
+
+    // 获取路线详情（详细版）
+    function fetchRouteDetailRealTime(origin, destination, mode, callback) {
+        var ak = serverAk;
+        
+        if (!ak) {
+            callback({ success: false, error: '请先配置百度地图AK' });
+            return;
+        }
+        
+        var url = '';
+        if (mode === 'walking') {
+            url = `https://api.map.baidu.com/direction/v2/walking?origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}&ak=${ak}&output=json`;
+        } else if (mode === 'transit') {
+            url = `https://api.map.baidu.com/direction/v2/transit?origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}&ak=${ak}&output=json`;
+        } else {
+            url = `https://api.map.baidu.com/direction/v2/driving?origin=${origin.lat},${origin.lng}&destination=${destination.lat},${destination.lng}&ak=${ak}&output=json`;
+        }
+        
+        var callbackName = 'routeCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+        url += '&callback=' + callbackName;
+        
+        var dirMap = {0:'',1:'北',2:'东北',3:'东',4:'东南',5:'南',6:'西南',7:'西',8:'西北',9:'掉头',10:'左前方',11:'右前方',12:'左后方',13:'右后方'};
+        
+        window[callbackName] = function(data) {
+            if (data.status === 0 && data.result && data.result.routes && data.result.routes.length > 0) {
+                var route = data.result.routes[0];
+                var distance = (route.distance / 1000).toFixed(1);
+                var duration = Math.floor(route.duration / 60);
+                var steps = [];
+                
+                if (mode === 'driving') {
+                    var stepsData = data.result.routes[0].steps;
+                    for (var i = 0; i < stepsData.length; i++) {
+                        var step = stepsData[i];
+                        var roadName = step.road_name || '';
+                        var stepDistance = step.distance;
+                        var direction = step.direction;
+                        var desc = '';
+                        var distKm = (stepDistance / 1000).toFixed(1);
+                        
+                        if (i === 0) {
+                            desc = '从起点向' + dirMap[direction] + '方向行驶，进入' + roadName + '，行驶' + distKm + '公里';
+                        } else if (i === stepsData.length - 1) {
+                            var dirText = dirMap[direction];
+                            if (dirText === '掉头') {
+                                desc = '掉头行驶' + distKm + '公里，到达终点';
+                            } else if (dirText) {
+                                desc = '向' + dirText + '方向行驶' + distKm + '公里，到达终点';
+                            } else {
+                                desc = '行驶' + distKm + '公里，到达终点';
+                            }
+                        } else {
+                            var dirText = dirMap[direction];
+                            if (dirText === '掉头') {
+                                desc = '掉头，进入' + roadName + '，行驶' + distKm + '公里';
+                            } else if (dirText) {
+                                desc = dirText + '转，进入' + roadName + '，行驶' + distKm + '公里';
+                            } else {
+                                desc = '进入' + roadName + '，行驶' + distKm + '公里';
+                            }
+                        }
+                        if (desc) steps.push({ type: 'text', text: desc });
+                    }
+                } 
+                else if (mode === 'walking') {
+                    var stepsData = data.result.routes[0].steps;
+                    for (var i = 0; i < stepsData.length; i++) {
+                        var step = stepsData[i];
+                        var desc = step.instructions || '';
+                        desc = desc.replace(/<[^>]+>/g, '');
+                        if (desc) steps.push({ type: 'text', text: desc });
+                    }
+                }
+                else if (mode === 'transit') {
+                    var stepGroups = data.result.routes[0].steps;
+                    var walkPointsData = {};
+                    
+                    for (var g = 0; g < stepGroups.length; g++) {
+                        var group = stepGroups[g];
+                        if (group && group.length) {
+                            for (var h = 0; h < group.length; h++) {
+                                var step = group[h];
+                                var transType = step.trans_type;
+                                var instruction = step.instructions || '';
+                                instruction = instruction.replace(/<[^>]+>/g, '');
+                                
+                                if (transType === 0) {
+                                    // 步行部分
+                                    var walkMatch = instruction.match(/步行(\d+)米/);
+                                    var walkKey = 'walk_' + Date.now() + '_' + g + '_' + h;
+                                    walkPointsData[walkKey] = {
+                                        start: step.start_location,
+                                        end: step.end_location,
+                                        text: walkMatch ? ('🚶 步行 ' + walkMatch[1] + '米') : instruction
+                                    };
+                                    steps.push({
+                                        type: 'walk',
+                                        text: walkMatch ? ('🚶 步行 ' + walkMatch[1] + '米') : instruction,
+                                        walkKey: walkKey
+                                    });
+                                } else {
+                                    // 公交/地铁部分
+                                    var onStationMatch = instruction.match(/^(.+?)站乘/);
+                                    var lineMatch = instruction.match(/乘(.+?)[\(（]/);
+                                    var stationCountMatch = instruction.match(/经过(\d+)站/);
+                                    var offStationMatch = instruction.match(/到(.+?)站$/);
+                                    
+                                    var lineName = lineMatch ? lineMatch[1] : '';
+                                    var stationCount = stationCountMatch ? stationCountMatch[1] : '';
+                                    var stations = [];
+                                    
+                                    if (step.vehicle_info && step.vehicle_info.detail && step.vehicle_info.detail.stop_info) {
+                                        var stopInfo = step.vehicle_info.detail.stop_info;
+                                        for (var s = 0; s < stopInfo.length; s++) {
+                                            stations.push(stopInfo[s].stop_name);
+                                        }
+                                    }
+                                    
+                                    var busKey = 'bus_' + Date.now() + '_' + g + '_' + h;
+                                    window.busStationsData = window.busStationsData || {};
+                                    window.busStationsData[busKey] = {
+                                        lineName: lineName,
+                                        stationCount: stationCount,
+                                        stations: stations,
+                                        onStation: onStationMatch ? onStationMatch[1] : '',
+                                        offStation: offStationMatch ? offStationMatch[1] : ''
+                                    };
+                                    
+                                    var busSteps = [];
+
+                                    if (onStationMatch) {
+                                        busSteps.push({ type: 'text', text: '🚌 ↑ 在 ' + onStationMatch[1] + ' 上车' });
+                                    }
+                                    if (lineMatch) {
+                                        busSteps.push({
+                                            type: 'stationCount',
+                                            text: '   乘坐 ' + lineName + '，经过 ',
+                                            count: stationCount,
+                                            busKey: busKey
+                                        });
+                                    }
+                                    if (offStationMatch) {
+                                        busSteps.push({ type: 'text', text: '🚌 ↓ 在 ' + offStationMatch[1] + ' 下车' });
+                                    }
+                                    
+                                    steps.push({
+                                        type: 'bus',
+                                        steps: busSteps,
+                                        busKey: busKey
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 保存步行数据供全局使用
+                    window.walkPointsData = walkPointsData;
+                }
+                
+                callback({
+                    success: true,
+                    distance: distance,
+                    duration: duration,
+                    steps: steps,
+                    mode: mode
+                });
+            } else {
+                callback({ success: false, error: data.message || '获取路线失败' });
+            }
+            delete window[callbackName];
+        };
+        
+        var script = document.createElement('script');
+        script.src = url;
+        script.onerror = function() {
+            callback({ success: false, error: '网络错误' });
+            delete window[callbackName];
+        };
+        document.head.appendChild(script);
+    }
+    
+    // 渲染行程详情（不刷新整个页面）
+    function renderDetailContent(detail) {
+        var container = document.getElementById('detailContent');
+        var titleSpan = document.getElementById('detailTitle');
+        titleSpan.innerText = detail.name;
+        
+        if (detail.days.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏝️</div><p>暂无行程</p><p style="font-size:12px">从首页保存景点到攻略吧</p><div class="add-day-btn" id="addFirstDayBtn">+ 添加第一天</div></div>';
+            var addBtn = document.getElementById('addFirstDayBtn');
+            if (addBtn) addBtn.onclick = function() { addNewDay(currentTripId); };
+            return;
+        }
+        
+        var html = '';
+        for (var d = 0; d < detail.days.length; d++) {
+            var day = detail.days[d];
+            html += '<div class="day-card" data-day-index="' + d + '">';
+            html += '<div class="day-header">';
+            html += '<span class="day-title">第' + (d + 1) + '天 · ' + day.date + '</span>';
+            html += '<div style="display:flex; align-items:center; gap:8px;">';
+            html += '<span class="day-stats">' + day.spots.length + '个景点</span>';
+            html += '<span class="delete-day" data-day-index="' + d + '" style="cursor:pointer; color:#f44336; font-size:14px;">🗑️</span>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="day-content" id="dayContent_' + d + '">';
+            
+            for (var s = 0; s < day.spots.length; s++) {
+                var spot = day.spots[s];
+                html += '<div class="spot-card" data-spot-id="' + spot.id + '" data-spot-index="' + s + '" data-day-index="' + d + '" draggable="true">';
+
+                // 改为（添加删除按钮）
+                html += '<div class="spot-header">';
+                html += '<div class="spot-name">';
+                html += '<span class="drag-handle">⋮⋮</span>';
+                html += '<span>' + spot.name + '</span>';
+                html += '</div>';
+                html += '<div style="display:flex; align-items:center; gap:8px;">';
+                html += '<div class="spot-time" onclick="event.stopPropagation(); editSpotTime(\'' + spot.id + '\')">🕐 ' + spot.arrivalTime + '</div>';
+                html += '<span class="delete-spot" data-spot-id="' + spot.id + '" data-day-index="' + d + '" data-spot-name="' + spot.name.replace(/'/g, "\\'") + '" style="cursor:pointer; color:#f44336; font-size:14px;">🗑️</span>';
+                html += '</div>';
+                html += '</div>';
+
+                html += '<div class="spot-detail">';
+                html += '<div>⏱️ 游玩时长: ' + Math.floor(spot.duration / 60) + '小时' + (spot.duration % 60 ? (spot.duration % 60 + '分钟') : '') + ' <span class="edit-icon" onclick="event.stopPropagation(); editSpotDuration(\'' + spot.id + '\')">✏️</span></div>';
+                html += '<div>💰 预算: ¥' + spot.cost + ' <span class="edit-icon" onclick="event.stopPropagation(); editSpotCost(\'' + spot.id + '\')">✏️</span></div>';
+                if (spot.note) {
+                    html += '<div class="spot-note">📝 ' + spot.note + ' <span class="edit-icon" onclick="event.stopPropagation(); editSpotNote(\'' + spot.id + '\')">✏️</span></div>';
+                } else {
+                    html += '<div class="spot-note" style="color:#ccc;" onclick="event.stopPropagation(); editSpotNote(\'' + spot.id + '\')">+ 添加备注</div>';
+                }
+                html += '</div>';
+                
+                // 交通方式（非最后一个景点）
+                if (s < day.spots.length - 1) {
+                    var nextSpot = day.spots[s + 1];
+                    var transport = spot.transportToNext || { mode: 'driving', duration: 0 };
+                    var modeIcon = transport.mode === 'driving' ? '🚗' : (transport.mode === 'transit' ? '🚌' : '🚶');
+                    html += '<div class="transport-row" data-spot-id="' + spot.id + '" data-next-id="' + nextSpot.id + '">';
+                    html += '<span class="transport-icon">' + modeIcon + '</span>';
+                    html += '<select class="transport-select" data-spot-id="' + spot.id + '" data-next-id="' + nextSpot.id + '" data-origin-lat="' + spot.lat + '" data-origin-lng="' + spot.lng + '" data-dest-lat="' + nextSpot.lat + '" data-dest-lng="' + nextSpot.lng + '" data-next-name="' + nextSpot.name.replace(/'/g, "\\'") + '">';
+                    html += '<option value="driving" ' + (transport.mode === 'driving' ? 'selected' : '') + '>🚗 驾车</option>';
+                    html += '<option value="transit" ' + (transport.mode === 'transit' ? 'selected' : '') + '>🚌 公交/地铁</option>';
+                    html += '<option value="walking" ' + (transport.mode === 'walking' ? 'selected' : '') + '>🚶 步行</option>';
+                    html += '</select>';
+                    html += '<span class="transport-time">⏱️ ' + transport.duration + '分钟</span>';
+                    html += '<span class="expand-icon" onclick="event.stopPropagation(); toggleRouteDetail(this)">▼</span>';
+                    html += '</div>';
+                    html += '<div class="route-detail" style="display:none; margin-top:8px; padding:8px 12px; background:#f8f9fa; border-radius:8px; font-size:12px; color:#666;"></div>';
+                }
+                html += '</div>';
+            }
+            
+            html += '<div style="padding:12px 0; text-align:center;">';
+            html += '<button class="add-spot-btn" data-day-index="' + d + '" style="background:none;border:none;color:#007AFF;font-size:13px;cursor:pointer;">+ 添加景点</button>';
+            html += '</div>';
+            html += '</div></div>';
+        }
+        html += '<div class="add-day-btn" id="addDayBtn">+ 添加新的一天</div>';
+        container.innerHTML = html;
+        
+        // 绑定折叠事件
+        var dayHeaders = document.querySelectorAll('.day-header');
+        for (var i = 0; i < dayHeaders.length; i++) {
+            dayHeaders[i].onclick = function() {
+                var content = this.nextElementSibling;
+                content.classList.toggle('open');
+            };
+            if (i === 0) dayHeaders[i].nextElementSibling.classList.add('open');
+        }
+        
+        // 绑定添加景点按钮
+        var addSpotBtns = document.querySelectorAll('.add-spot-btn');
+        for (var i = 0; i < addSpotBtns.length; i++) {
+            addSpotBtns[i].onclick = function() {
+                var dayIndex = parseInt(this.getAttribute('data-day-index'));
+                showAddSpotDialog(dayIndex);
+            };
+        }
+        
+        // 绑定交通方式切换事件
+        var transportSelects = document.querySelectorAll('.transport-select');
+        for (var i = 0; i < transportSelects.length; i++) {
+            transportSelects[i].onchange = function() {
+                var spotId = this.getAttribute('data-spot-id');
+                var newMode = this.value;
+                var originLat = parseFloat(this.getAttribute('data-origin-lat'));
+                var originLng = parseFloat(this.getAttribute('data-origin-lng'));
+                var destLat = parseFloat(this.getAttribute('data-dest-lat'));
+                var destLng = parseFloat(this.getAttribute('data-dest-lng'));
+                var nextSpotName = this.getAttribute('data-next-name') || '目的地';
+                var routeDetailDiv = this.parentElement.nextElementSibling;
+                
+                routeDetailDiv.style.display = 'block';
+                routeDetailDiv.innerHTML = '⏳ 获取路线中...';
+                
+                fetchRouteDetailRealTime(
+                    { lat: originLat, lng: originLng },
+                    { lat: destLat, lng: destLng },
+                    newMode,
+                    function(result) {
+                        if (result.success) {
+                            // 更新旁边的交通时间显示
+                            var timeSpan = this.parentElement.querySelector('.transport-time');
+                            if (timeSpan) {
+                                // 使用 formatDuration 格式化时间
+                                var formattedTime = formatDuration(result.duration);
+                                timeSpan.innerHTML = '⏱️ ' + formattedTime;
+                            }
+
+                            var modeIcon = newMode === 'driving' ? '🚗' : (newMode === 'transit' ? '🚌' : '🚶');
+                            var modeName = newMode === 'driving' ? '驾车' : (newMode === 'transit' ? '公交/地铁' : '步行');
+                            var stepsHtml = '<div><strong>' + modeIcon + ' ' + modeName + ' · ' + result.distance + '公里 · ' + result.duration + '分钟</strong></div>';
+                            stepsHtml += '<div style="margin-top:6px;" id="routeStepsContainer">';
+                            
+                            for (var k = 0; k < result.steps.length; k++) {
+                                var step = result.steps[k];
+                                
+                                if (step.type === 'text') {
+                                    stepsHtml += '<div style="margin:4px 0;">' + (k + 1) + '. ' + step.text + '</div>';
+                                }
+                                else if (step.type === 'walk') {
+                                    stepsHtml += '<div style="margin:4px 0;">';
+                                    stepsHtml += '<span class="walk-trigger" data-walk-key="' + step.walkKey + '" style="cursor: pointer; color: #30A209; text-decoration: underline;">' + (k + 1) + '. ' + step.text + '</span>';
+                                    stepsHtml += '<div class="walk-detail" data-walk-key="' + step.walkKey + '" style="display:none; margin-left: 20px; margin-top: 4px; padding: 6px; background: #f0f9f0; border-radius: 6px; font-size: 11px;"></div>';
+                                    stepsHtml += '</div>';
+                                }
+                                else if (step.type === 'bus') {
+                                    stepsHtml += '<div style="margin:4px 0;">';
+                                    for (var b = 0; b < step.steps.length; b++) {
+                                        var busStep = step.steps[b];
+                                        if (busStep.type === 'text') {
+                                            stepsHtml += '<div>' + busStep.text + '</div>';
+                                        } else if (busStep.type === 'stationCount') {
+                                            stepsHtml += '<div>' + busStep.text + '<span class="station-trigger" data-bus-key="' + busStep.busKey + '" style="cursor: pointer; color: #2196F3; text-decoration: underline;">' + busStep.count + '站</span></div>';
+                                            stepsHtml += '<div class="stations-detail" data-bus-key="' + busStep.busKey + '" style="display:none; margin-left: 20px; margin-top: 4px; padding: 6px; background: #e8f4fd; border-radius: 6px; font-size: 11px;"></div>';
+                                        }
+                                    }
+                                    stepsHtml += '</div>';
+                                }
+                            }
+                            
+                            stepsHtml += '</div>';
+                            // ========== 合并同站上下车 ==========
+                            stepsHtml = stepsHtml.replace(/🚌 ↓ 在 (.+?) 下车[\s\S]*?🚌 ↑ 在 \1 上车/g, '<span style="color: #FF9800;">🔄 $1 换乘</span>');
+                            // ===================================
+                            routeDetailDiv.innerHTML = stepsHtml;
+                            
+                            // 绑定步行详情点击事件
+                            var walkTriggers = document.querySelectorAll('.walk-trigger');
+                            for (var w = 0; w < walkTriggers.length; w++) {
+                                walkTriggers[w].onclick = function(e) {
+                                    e.stopPropagation();
+                                    var walkKey = this.getAttribute('data-walk-key');
+                                    var detailDiv = document.querySelector('.walk-detail[data-walk-key="' + walkKey + '"]');
+                                    if (detailDiv.style.display === 'none') {
+                                        detailDiv.style.display = 'block';
+                                        if (detailDiv.innerHTML === '') {
+                                            detailDiv.innerHTML = '⏳ 获取步行指引...';
+                                            fetchWalkDetail(walkKey, detailDiv);
+                                        }
+                                    } else {
+                                        detailDiv.style.display = 'none';
+                                    }
+                                };
+                            }
+                            
+                            // 绑定公交站点点击事件
+                            var stationTriggers = document.querySelectorAll('.station-trigger');
+                            for (var s = 0; s < stationTriggers.length; s++) {
+                                stationTriggers[s].onclick = function(e) {
+                                    e.stopPropagation();
+                                    var busKey = this.getAttribute('data-bus-key');
+                                    var detailDiv = document.querySelector('.stations-detail[data-bus-key="' + busKey + '"]');
+                                    if (detailDiv.style.display === 'none') {
+                                        detailDiv.style.display = 'block';
+                                        var busData = window.busStationsData[busKey];
+                                        if (busData && busData.stations && busData.stations.length > 0) {
+                                            var html = '';
+                                            for (var i = 0; i < busData.stations.length; i++) {
+                                                html += '<div>' + (i + 1) + '. ' + busData.stations[i] + '</div>';
+                                            }
+                                            detailDiv.innerHTML = html;
+                                        } else {
+                                            detailDiv.innerHTML = '暂无站点信息';
+                                        }
+                                    } else {
+                                        detailDiv.style.display = 'none';
+                                    }
+                                };
+                            }
+                        } else {
+                            routeDetailDiv.innerHTML = '❌ ' + (result.error || '获取路线失败');
+                        }
+                    }.bind(this)
+                );
+            };
+        }
+
+        // 绑定删除景点按钮
+        var deleteSpots = document.querySelectorAll('.delete-spot');
+        for (var i = 0; i < deleteSpots.length; i++) {
+            deleteSpots[i].onclick = function(e) {
+                e.stopPropagation();
+                var spotId = this.getAttribute('data-spot-id');
+                var dayIndex = parseInt(this.getAttribute('data-day-index'));
+                var spotName = this.getAttribute('data-spot-name');
+                deleteSpot(spotId, dayIndex, spotName);
+            };
+        }
+
+        // 绑定删除天数按钮
+        var deleteDays = document.querySelectorAll('.delete-day');
+        for (var i = 0; i < deleteDays.length; i++) {
+            deleteDays[i].onclick = function(e) {
+                e.stopPropagation();
+                var dayIndex = parseInt(this.getAttribute('data-day-index'));
+                deleteDay(dayIndex);
+            };
+        }
+
+
+        // ========== 新增：页面加载时自动触发路线获取 ==========
+        for (var i = 0; i < transportSelects.length; i++) {
+            (function(select) {
+                setTimeout(function() {
+                    if (select && select.onchange) {
+                        // 临时保存 routeDetailDiv 的原始状态
+                        var routeDetailDiv = select.parentElement.nextElementSibling;
+                        var originalDisplay = routeDetailDiv ? routeDetailDiv.style.display : 'none';
+                        
+                        // 临时设置为 block 以便加载，加载完成后恢复
+                        if (routeDetailDiv) {
+                            routeDetailDiv.style.display = 'block';
+                        }
+                        
+                        // 触发加载
+                        select.onchange();
+                        
+                        // 加载完成后恢复为收起状态
+                        setTimeout(function() {
+                            if (routeDetailDiv) {
+                                routeDetailDiv.style.display = 'none';
+                            }
+                        }, 100);
+                    }
+                }, 200);
+            })(transportSelects[i]);
+        }
+        // ===================================================
+        
+        var addDayBtn = document.getElementById('addDayBtn');
+        if (addDayBtn) addDayBtn.onclick = function() { addNewDay(currentTripId); };
+    }
+    
+    // 切换路线详情显示
+    function toggleRouteDetail(elem) {
+        var routeDetail = elem.parentElement.nextElementSibling;
+        if (routeDetail.style.display === 'none') {
+            routeDetail.style.display = 'block';
+        } else {
+            routeDetail.style.display = 'none';
+        }
+    }
+    
+    // 显示行程详情
+    function showTripDetail(tripId) {
+        currentTripId = tripId;
+        var detail = getTripDetail(tripId);
+        renderDetailContent(detail);
+        document.getElementById('listPage').style.display = 'none';
+        document.getElementById('detailPage').style.display = 'block';
+    }
+    
+    // 添加新的一天
+    function addNewDay(tripId) {
+        var detail = getTripDetail(tripId);
+        var newDayNum = detail.days.length + 1;
+        detail.days.push({
+            day: newDayNum,
+            date: new Date().toISOString().split('T')[0],
+            spots: []
+        });
+        saveTripDetail(tripId, detail);
+        renderDetailContent(detail);
+    }
+    
+    // 编辑景点时间
+    function editSpotTime(spotId) {
+        var detail = getTripDetail(currentTripId);
+        for (var i = 0; i < detail.days.length; i++) {
+            for (var j = 0; j < detail.days[i].spots.length; j++) {
+                if (detail.days[i].spots[j].id === spotId) {
+                    var newTime = prompt('请输入到达时间（如：09:00）', detail.days[i].spots[j].arrivalTime);
+                    if (newTime && newTime.match(/^\d{2}:\d{2}$/)) {
+                        detail.days[i].spots[j].arrivalTime = newTime;
+                        saveTripDetail(currentTripId, detail);
+                        renderDetailContent(detail);
+                    } else if (newTime) {
+                        alert('请输入正确的时间格式，如：09:00');
+                    }
+                    return;
+                }
+            }
+        }
+    }
+    
+    // 编辑游玩时长
+    function editSpotDuration(spotId) {
+        var detail = getTripDetail(currentTripId);
+        for (var i = 0; i < detail.days.length; i++) {
+            for (var j = 0; j < detail.days[i].spots.length; j++) {
+                if (detail.days[i].spots[j].id === spotId) {
+                    var hours = Math.floor(detail.days[i].spots[j].duration / 60);
+                    var input = prompt('请输入游玩时长（小时）', hours);
+                    if (input && !isNaN(input)) {
+                        detail.days[i].spots[j].duration = parseFloat(input) * 60;
+                        saveTripDetail(currentTripId, detail);
+                        renderDetailContent(detail);
+                    }
+                    return;
+                }
+            }
+        }
+    }
+    
+    // 编辑预算
+    function editSpotCost(spotId) {
+        var detail = getTripDetail(currentTripId);
+        for (var i = 0; i < detail.days.length; i++) {
+            for (var j = 0; j < detail.days[i].spots.length; j++) {
+                if (detail.days[i].spots[j].id === spotId) {
+                    var input = prompt('请输入预算（元）', detail.days[i].spots[j].cost);
+                    if (input && !isNaN(input)) {
+                        detail.days[i].spots[j].cost = parseFloat(input);
+                        saveTripDetail(currentTripId, detail);
+                        renderDetailContent(detail);
+                    }
+                    return;
+                }
+            }
+        }
+    }
+    
+    // 编辑备注
+    function editSpotNote(spotId) {
+        var detail = getTripDetail(currentTripId);
+        for (var i = 0; i < detail.days.length; i++) {
+            for (var j = 0; j < detail.days[i].spots.length; j++) {
+                if (detail.days[i].spots[j].id === spotId) {
+                    var input = prompt('请输入备注', detail.days[i].spots[j].note || '');
+                    if (input !== null) {
+                        detail.days[i].spots[j].note = input;
+                        saveTripDetail(currentTripId, detail);
+                        renderDetailContent(detail);
+                    }
+                    return;
+                }
+            }
+        }
+    }
+    
+    // 编辑行程名称
+    function editTripName() {
+        var detail = getTripDetail(currentTripId);
+        var newName = prompt('请输入行程名称', detail.name);
+        if (newName) {
+            detail.name = newName;
+            saveTripDetail(currentTripId, detail);
+            var trips = getTrips();
+            for (var i = 0; i < trips.length; i++) {
+                if (trips[i].id === currentTripId) {
+                    trips[i].name = newName;
+                    break;
+                }
+            }
+            saveTrips(trips);
+            document.getElementById('detailTitle').innerText = newName;
+            renderDetailContent(detail);
+        }
+    }
+    
+    // 返回列表
+    function backToList() {
+        document.getElementById('detailPage').style.display = 'none';
+        document.getElementById('listPage').style.display = 'block';
+        renderTripList();
+    }
+    
+    // 返回首页
+    function backToMain() {
+        window.location.href = 'main.html';
+    }
+
+    // <!---------------------------------------- 编辑我的攻略 ---------------------------------------->
+    var isEditMode = false;
+    var selectedTripIds = [];
+
+    // 进入编辑模式
+    function enterEditMode() {
+        isEditMode = true;
+        selectedTripIds = [];
+        renderTripList();
+        showEditBar();
+    }
+
+    // 退出编辑模式
+    function exitEditMode() {
+        isEditMode = false;
+        selectedTripIds = [];
+        renderTripList();
+        hideEditBar();
+    }
+
+    // 显示底部编辑栏
+    function showEditBar() {
+        var existingBar = document.getElementById('editBar');
+        if (existingBar) existingBar.remove();
+        
+        var barHtml = '<div id="editBar" class="edit-bar">';
+        barHtml += '<div class="select-all" id="selectAllBtn">';
+        barHtml += '<input type="checkbox" id="selectAllCheckbox"> <span>全选</span>';
+        barHtml += '</div>';
+        barHtml += '<div class="count">已选择 <span id="selectedCount">0</span> 个</div>';
+        barHtml += '<div>';
+        barHtml += '<button class="cancel-btn" id="cancelEditBtn">取消</button>';
+        barHtml += '<button class="delete-btn" id="batchDeleteBtn">删除</button>';
+        barHtml += '</div>';
+        barHtml += '</div>';
+        document.body.insertAdjacentHTML('beforeend', barHtml);
+        
+        document.getElementById('cancelEditBtn').onclick = exitEditMode;
+        document.getElementById('batchDeleteBtn').onclick = batchDeleteTrips;
+        document.getElementById('selectAllBtn').onclick = toggleSelectAll;
+    }
+
+    // 隐藏底部编辑栏
+    function hideEditBar() {
+        var bar = document.getElementById('editBar');
+        if (bar) bar.remove();
+    }
+
+    // 切换全选
+    function toggleSelectAll() {
+        var checkboxes = document.querySelectorAll('.trip-checkbox');
+        var isChecked = document.getElementById('selectAllCheckbox').checked;
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = isChecked;
+            var tripId = checkboxes[i].getAttribute('data-trip-id');
+            if (isChecked) {
+                if (selectedTripIds.indexOf(tripId) === -1) selectedTripIds.push(tripId);
+            } else {
+                var index = selectedTripIds.indexOf(tripId);
+                if (index !== -1) selectedTripIds.splice(index, 1);
+            }
+        }
+        updateSelectedCount();
+    }
+
+    // 更新已选择数量
+    function updateSelectedCount() {
+        var countSpan = document.getElementById('selectedCount');
+        if (countSpan) countSpan.innerText = selectedTripIds.length;
+        
+        var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        if (selectAllCheckbox) {
+            var totalCheckboxes = document.querySelectorAll('.trip-checkbox').length;
+            selectAllCheckbox.checked = (selectedTripIds.length === totalCheckboxes && totalCheckboxes > 0);
+        }
+    }
+
+    // 批量删除
+    function batchDeleteTrips() {
+        if (selectedTripIds.length === 0) {
+            alert('请先选择要删除的行程');
+            return;
+        }
+        
+        if (confirm('确定要删除选中的 ' + selectedTripIds.length + ' 个行程吗？')) {
+            var trips = getTrips();
+            var newTrips = [];
+            for (var i = 0; i < trips.length; i++) {
+                if (selectedTripIds.indexOf(trips[i].id) === -1) {
+                    newTrips.push(trips[i]);
+                } else {
+                    localStorage.removeItem('trip_detail_' + trips[i].id);
+                }
+            }
+            saveTrips(newTrips);
+            exitEditMode();
+            showToast('已删除 ' + selectedTripIds.length + ' 个行程');
+        }
+    }
+    // <!--------------------------------------------------------------------------------------------->
+
+    
+    // 初始化
+    function init() {
+        renderTripList();
+        document.getElementById('backToMainBtn').onclick = backToMain;
+        document.getElementById('backToListBtn').onclick = backToList;
+        document.getElementById('editTripNameBtn').onclick = editTripName;
+        document.getElementById('addTripBtn').onclick = createNewTrip;
+        // 新增：管理按钮
+        var manageBtn = document.getElementById('manageBtn');
+        if (manageBtn) {
+            manageBtn.onclick = function() {
+                if (isEditMode) {
+                    exitEditMode();
+                } else {
+                    enterEditMode();
+                }
+            };
+        }
+    }
+    
+    window.addEventListener('pageshow', function() {
+        if (document.getElementById('listPage').style.display !== 'none') {
+            renderTripList();
+        }
+    });
+    
+    init();
+    
+    window.editSpotTime = editSpotTime;
+    window.editSpotDuration = editSpotDuration;
+    window.editSpotCost = editSpotCost;
+    window.editSpotNote = editSpotNote;
+    window.toggleRouteDetail = toggleRouteDetail;
+</script>
+
+</body>
+</html>
