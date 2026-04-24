@@ -827,14 +827,14 @@
         .home-slogan {
             font-size: 13px;
             color: rgba(255,255,255,0.85);
-            line-height: 2.5;
+            line-height: 2;
             margin-bottom: 0;
         }
 
         /* 网格区域 */
         .home-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             width: 100%;
             max-width: 280px;
@@ -873,6 +873,52 @@
             color: #999;
         }
 
+        /* 攻略横幅样式 */
+        .home-trip-banner {
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            margin: 16px auto 0;
+            padding: 14px 20px;
+            width: 90%;
+            max-width: 260px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+
+        .home-trip-banner:active {
+            transform: scale(0.98);
+            background: white;
+        }
+
+        .banner-icon {
+            font-size: 32px;
+        }
+
+        .banner-text {
+            flex: 1;
+        }
+
+        .banner-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .banner-desc {
+            font-size: 11px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .banner-arrow {
+            font-size: 20px;
+            color: #999;
+        }
+
         /* 按钮区域 */
         .home-start {
             text-align: center;
@@ -893,7 +939,7 @@
             width: 70%;
             max-width: 220px;
             display: block;
-            margin: 0 auto;
+            margin: 16px auto 0;  /* 上边距16px */
         }
 
         .home-start-btn:active {
@@ -1252,13 +1298,24 @@
                     <div class="grid-desc">发现好店</div>
                 </div>
             </div>
-            
+
+            <!-- 攻略横幅 -->
+            <div class="home-trip-banner" data-page="trip">
+                <div class="banner-icon">📅</div>
+                <div class="banner-text">
+                    <div class="banner-title">我的攻略</div>
+                    <div class="banner-desc">查看和管理行程计划</div>
+                </div>
+                <div class="banner-arrow">→</div>
+            </div>
+
+                        
             <!-- 开始按钮 -->
             <button class="home-start-btn" id="startBtn">开始使用</button>
 
             <!-- 版本信息 -->
             <div class="version-info" id="versionInfo" style="text-align: center; margin-top: 20px; font-size: 11px; color: rgba(255,255,255,0.6);">
-                版本 v<span id="versionNumber">20260422.01</span>
+                版本 v<span id="versionNumber">20260422.02</span>
                 <span id="updateBadge" style="display: none; background: #4CAF50; padding: 2px 8px; border-radius: 20px; margin-left: 8px; font-size: 10px;">✓ 已更新</span>
             </div>
         </div>
@@ -4688,6 +4745,7 @@
             }      
 
             // ========== 首页卡片点击 ==========
+            // 首页卡片点击
             homeCards.forEach(function(card) {
                 card.addEventListener('click', function() {
                     var page = this.getAttribute('data-page');
@@ -4700,6 +4758,14 @@
                     setDrawerState('half');
                 });
             });
+
+            // 攻略横幅点击（新增）
+            var tripBanner = document.querySelector('.home-trip-banner');
+            if (tripBanner) {
+                tripBanner.addEventListener('click', function() {
+                    window.location.href = 'plan.html';
+                });
+            }
             
             // 开始按钮
             if (startBtn) {
