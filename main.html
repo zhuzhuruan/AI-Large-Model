@@ -1147,7 +1147,6 @@
                     </select>
                 </div>
 
-
                 <div style="display: flex;  gap: 10px;">
                     <button class="btn-primary" id="calcDistanceBtn" style="width: 50%;">🚗 查看路线</button>
                     <button class="btn-gray" id="clearLinesBtn" style="width: 50%;">🗑️ 清除路线</button>
@@ -1347,13 +1346,13 @@
     <script>
         // ==================== 请替换成你的百度地图 AK ====================
         // 浏览器端 AK（用于地图显示）- 保持不变
-        // var BAIDU_API_KEY = 'FYugigEWwXbDwzhQn4gVYlz00FXQRsNc';   // ⬅️ 这里改成你自己的
+        // var BAIDU_API_KEY = '';   // ⬅️ 这里改成你自己的
         // 服务端 AK（用于获取路线数据）- 需要你单独申请
-        // var BAIDU_SERVER_AK = 'X5WPPIRe8wRkLTGMJNntbuv7TPgNgjgo';
+        // var BAIDU_SERVER_AK = '';
         // ================================================================
         // ========== 版本自动更新检测 ==========
         (function() {
-            var APP_VERSION = '20260424.01';  // 每次更新代码时修改这个数字
+            var APP_VERSION = '20260428.01';  // 每次更新代码时修改这个数字
             var savedVersion = localStorage.getItem('travel_app_version');
             
             // 显示当前版本号（用于调试）
@@ -1951,6 +1950,94 @@
         }
 
         // <!---------------------------------------- 出行方式：公交 ---------------------------------------->
+        // 分析路线特征，生成有意义的名称
+        function analyzeRouteFeatures(route, minutes) {
+            var steps = route.steps;
+            var hasSubway = false;
+            var hasBus = false;
+            var transferCount = 0;
+            var totalWalkDistance = 0;
+            var lineNames = [];
+            
+            for (var i = 0; i < steps.length; i++) {
+                var stepList = steps[i];
+                if (stepList && stepList.length) {
+                    for (var j = 0; j < stepList.length; j++) {
+                        var step = stepList[j];
+                        var stepType = step.trans_type;
+                        var instruction = step.instructions || '';
+                        
+                        if (stepType === 0) {
+                            // 步行：提取步行距离
+                            var walkMatch = instruction.match(/步行(\d+)米/);
+                            if (walkMatch) {
+                                totalWalkDistance += parseInt(walkMatch[1]);
+                            }
+                        } else {
+                            // 公交/地铁：统计换乘
+                            transferCount++;
+                            if (instruction.indexOf('地铁') !== -1 || instruction.indexOf('号线') !== -1) {
+                                    hasSubway = true;
+                            } else if (instruction.indexOf('换乘') === -1) {
+                                // 排除换乘指令，只统计实际的公交/地铁段
+                                hasBus = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 换乘次数减1（因为第一段不算换乘）
+            if (transferCount > 0) transferCount--;
+            
+            var result = {
+                icon: '🚌',
+                name: '公交',
+                detail: ''
+            };
+            
+            // 根据特征决定命名
+            if (hasSubway && !hasBus && transferCount === 0) {
+                result.icon = '🚇';
+                result.name = '地铁直达';
+                result.detail = minutes + '分钟';
+            } else if (hasSubway && !hasBus && transferCount === 1) {
+                result.icon = '🚇';
+                result.name = '地铁换乘1次';
+                result.detail = minutes + '分钟';
+            } else if (hasSubway && !hasBus && transferCount > 1) {
+                result.icon = '🚇';
+                result.name = '地铁多换乘';
+                result.detail = transferCount + '次换乘';
+            } else if (hasSubway && hasBus) {
+                result.icon = '🚇🚌';
+                result.name = '地铁+公交';
+                result.detail = transferCount + '次换乘';
+            } else if (!hasSubway && hasBus && transferCount === 0) {
+                result.icon = '🚌';
+                result.name = '公交直达';
+                result.detail = minutes + '分钟';
+            } else if (!hasSubway && hasBus) {
+                result.icon = '🚌';
+                result.name = '公交多换乘';
+                result.detail = transferCount + '次换乘';
+            }
+            
+            // 步行少的情况
+            if (totalWalkDistance < 300 && totalWalkDistance > 0) {
+                result.detail = '少步行';
+            } else if (totalWalkDistance > 1000) {
+                result.detail = '步行较多';
+            }
+            
+            // 如果线路名称唯一，可以加到名称里
+            if (lineNames.length === 1 && lineNames[0]) {
+                result.name = lineNames[0];
+            }
+            
+            return result;
+        }
+
         // 公交/地铁路线
         function calcTransitRoute(s, e) {
             var startPoint = new BMap.Point(s.lng, s.lat);
@@ -1973,178 +2060,218 @@
                 var startName = (s && s.name) ? s.name.replace(/\n/g, '').replace(/\r/g, '') : '';
                 var endName = (e && e.name) ? e.name.replace(/\n/g, '').replace(/\r/g, '') : '';
 
-                console.log('calcTransitRoute 内部: s=', s, 's.name=', s ? s.name : 'null');
-                console.log('startName=', startName);
-
                 if (data.status === 0 && data.result && data.result.routes && data.result.routes.length > 0) {
-                    var route = data.result.routes[0];
-                    var steps = route.steps;
+                    var routes = data.result.routes;  // 所有备选路线
+                    var routesHtml = '';
+                    
+                    // 生成方案切换 Tab
+                    routesHtml += '<div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">';
+                    for (var r = 0; r < routes.length && r < 5; r++) {
+                        var routeItem = routes[r];
+                        var distKm = (routeItem.distance / 1000).toFixed(1);
+                        var minutes = Math.floor(routeItem.duration / 60);
+                        
+                        // 分析路线特征
+                        var features = analyzeRouteFeatures(routeItem, minutes);
+                        
+                        var tabText = features.icon + ' ' + features.name;
+                        if (features.detail) {
+                            tabText += ' (' + features.detail + ')';
+                        } else {
+                            tabText += ' (' + minutes + '分钟)';
+                        }
+                        
+                        routesHtml += '<button class="route-tab" data-route-index="' + r + '" style="padding: 4px 12px; background: ' + (r === 0 ? '#2196F3' : '#e0e0e0') + '; color: ' + (r === 0 ? 'white' : '#666') + '; border: none; border-radius: 20px; font-size: 11px; cursor: pointer;">' + tabText + '</button>';
+                    }
+                    routesHtml += '</div>';
+                    
+                    // 所有方案的详细内容容器
+                    routesHtml += '<div id="routesContainer"></div>';
+                    document.getElementById('distanceResult').innerHTML = routesHtml;
                     
                     // 清空之前的数据
                     window.routeData = { walk: [], bus: [] };
                     
-                    // 解析 steps 并构建乘车方案
-                    // 构建乘车方案HTML（详细分行格式）                    
-                    var stepsData = data.result.routes[0].steps;
-                    var routeSteps = [];
-                    var allStepDescriptions = [];  // 添加这一行
-                    for (var i = 0; i < stepsData.length; i++) {
-                        var stepList = stepsData[i];
+                    // 为每个方案渲染内容
+                    for (var r = 0; r < routes.length && r < 5; r++) {
+                        var route = routes[r];
+                        var distance = route.distance / 1000;
+                        var duration = route.duration;
+                        var minutes = Math.floor(duration / 60);
+                        var hours = Math.floor(minutes / 60);
+                        var remainMinutes = minutes % 60;
+                        var timeStr = '';
+                        if (hours > 0) timeStr += hours + '小时';
+                        if (remainMinutes > 0) timeStr += remainMinutes + '分钟';
+                        if (timeStr === '') timeStr = minutes + '分钟';
                         
-                        for (var j = 0; j < stepList.length; j++) {
-                            var step = stepList[j];
-                            var stepType = step.trans_type;  // 0=步行, -1=公交/地铁
-                            var instruction = step.instructions || '';
-                            
-                            // 解析路径点
-                            if (step.path && step.path !== '') {
-                                var pathStr = step.path;
-                                var pathPoints = [];
-                                var coords = pathStr.split(';');
+                        // 解析这个方案的 steps
+                        var stepsData = route.steps;
+                        var routeSteps = [];
+                        var allStepDescriptions = [];
+                        
+                        for (var i = 0; i < stepsData.length; i++) {
+                            var stepList = stepsData[i];
+                            for (var j = 0; j < stepList.length; j++) {
+                                var step = stepList[j];
+                                var stepType = step.trans_type;
+                                var instruction = step.instructions || '';
                                 
-                                for (var k = 0; k < coords.length; k++) {
-                                    var coord = coords[k].split(',');
-                                    if (coord.length === 2) {
-                                        pathPoints.push(new BMap.Point(parseFloat(coord[0]), parseFloat(coord[1])));
-                                    }
-                                }
-                                
-                                if (pathPoints.length > 0) {
-                                    if (stepType === 0) {
-                                        window.routeData.walk.push(pathPoints);
-                                    } else {
-                                        window.routeData.bus.push(pathPoints);
-                                    }
-                                }
-                            }
-                            
-                            // 构建显示文本
-                            if (stepType === 0) {
-                                var walkMatch = instruction.match(/步行(\d+)米/);
-                                var walkDistance = walkMatch ? walkMatch[1] : '';
-                                var walkText = walkMatch ? ('🚶 步行 ' + walkDistance + '米') : ('🚶 ' + instruction);
-                                
-                                // 获取步行的起点和终点坐标
-                                var walkStart = step.start_location;
-                                var walkEnd = step.end_location;
-                                
-                                // 存储步行起终点
-                                var walkKey = 'walk_' + i + '_' + j;
-                                window.walkPointsData = window.walkPointsData || {};
-                                window.walkPointsData[walkKey] = {
-                                    start: walkStart,
-                                    end: walkEnd,
-                                    text: walkText
-                                };
-                                
-                                // 创建可点击的步行描述
-                                routeSteps.push('<span style="cursor: pointer; color: #30A209; text-decoration: underline;" onclick="showWalkGuidance(this, \'' + walkKey + '\')">' + walkText + '</span>');
-                            } else {
-                                // 公交段：解析上下车站点和线路
-                                var onStationMatch = instruction.match(/^(.+?)站乘/);
-                                var lineMatch = instruction.match(/乘(.+?)[\(（]/);
-                                var stationCountMatch = instruction.match(/经过(\d+)站/);
-                                var offStationMatch = instruction.match(/到(.+?)站$/);
-                                
-                                if (onStationMatch) {
-                                    var onStation = onStationMatch[1] + '站';
-                                    routeSteps.push('🚌 ↑ <span style="color: #4271B0;">' + onStation + '</span> 上车');
-                                }
-
-                                if (lineMatch) {
-                                    var lineName = lineMatch[1];
-                                    var stationCount = stationCountMatch ? stationCountMatch[1] : '';
-                                    
-                                    // 获取站点列表
-                                    var busStationsList = [];
-                                    if (step.vehicle_info && step.vehicle_info.detail && step.vehicle_info.detail.stop_info) {
-                                        var stopInfo = step.vehicle_info.detail.stop_info;
-                                        for (var t = 0; t < stopInfo.length; t++) {
-                                            busStationsList.push(stopInfo[t].stop_name);
+                                // 解析路径点
+                                if (step.path && step.path !== '') {
+                                    var pathStr = step.path;
+                                    var pathPoints = [];
+                                    var coords = pathStr.split(';');
+                                    for (var k = 0; k < coords.length; k++) {
+                                        var coord = coords[k].split(',');
+                                        if (coord.length === 2) {
+                                            pathPoints.push(new BMap.Point(parseFloat(coord[0]), parseFloat(coord[1])));
                                         }
                                     }
+                                    if (pathPoints.length > 0) {
+                                        if (stepType === 0) {
+                                            window.routeData.walk.push(pathPoints);
+                                        } else {
+                                            window.routeData.bus.push(pathPoints);
+                                        }
+                                    }
+                                }
+                                
+                                // 构建显示文本
+                                if (stepType === 0) {
+                                    var walkMatch = instruction.match(/步行(\d+)米/);
+                                    var walkDistance = walkMatch ? walkMatch[1] : '';
+                                    var walkText = walkMatch ? ('🚶 步行 ' + walkDistance + '米') : ('🚶 ' + instruction);
                                     
-                                    // 存储站点列表供展开使用
-                                    window.busStationsData = window.busStationsData || {};
-                                    window.busStationsData[lineName] = busStationsList;
+                                    var walkStart = step.start_location;
+                                    var walkEnd = step.end_location;
+                                    var walkKey = 'walk_' + i + '_' + j;
+                                    window.walkPointsData = window.walkPointsData || {};
+                                    window.walkPointsData[walkKey] = {
+                                        start: walkStart,
+                                        end: walkEnd,
+                                        text: walkText
+                                    };
                                     
-                                    // 创建可点击的站数显示
-                                    var stationHtml = stationCount + '站';
-                                    if (busStationsList.length > 0) {
-                                        stationHtml = '<span style="cursor: pointer; color: #2196F3; text-decoration: underline;" onclick="toggleStations(this, \'' + lineName.replace(/'/g, "\\'") + '\')">' + stationCount + '站</span>';
+                                    routeSteps.push('<span style="cursor: pointer; color: #30A209; text-decoration: underline;" onclick="showWalkGuidance(this, \'' + walkKey + '\')">' + walkText + '</span>');
+                                    allStepDescriptions.push(walkText);
+                                } else {
+                                    var onStationMatch = instruction.match(/^(.+?)站乘/);
+                                    var lineMatch = instruction.match(/乘(.+?)[\(（]/);
+                                    var stationCountMatch = instruction.match(/经过(\d+)站/);
+                                    var offStationMatch = instruction.match(/到(.+?)站$/);
+                                    
+                                    if (onStationMatch) {
+                                        var onStation = onStationMatch[1] + '站';
+                                        routeSteps.push('🚌 ↑ <span style="color: #4271B0;">' + onStation + '</span> 上车');
+                                        allStepDescriptions.push('🚌 ↑ ' + onStation);
                                     }
                                     
-                                    routeSteps.push('<div style="margin-left: 12px;">' + lineName + '  ' + stationHtml + '</div>');
+                                    if (lineMatch) {
+                                        var lineName = lineMatch[1];
+                                        var stationCount = stationCountMatch ? stationCountMatch[1] : '';
+                                        
+                                        var busStationsList = [];
+                                        if (step.vehicle_info && step.vehicle_info.detail && step.vehicle_info.detail.stop_info) {
+                                            var stopInfo = step.vehicle_info.detail.stop_info;
+                                            for (var t = 0; t < stopInfo.length; t++) {
+                                                busStationsList.push(stopInfo[t].stop_name);
+                                            }
+                                        }
+                                        
+                                        window.busStationsData = window.busStationsData || {};
+                                        window.busStationsData[lineName] = busStationsList;
+                                        
+                                        var stationHtml = stationCount + '站';
+                                        if (busStationsList.length > 0) {
+                                            stationHtml = '<span style="cursor: pointer; color: #2196F3; text-decoration: underline;" onclick="toggleStations(this, \'' + lineName.replace(/'/g, "\\'") + '\')">' + stationCount + '站</span>';
+                                        }
+                                        
+                                        routeSteps.push('<div style="margin-left: 12px;">' + lineName + '  ' + stationHtml + '</div>');
+                                        allStepDescriptions.push(lineName + ' ' + stationCount + '站');
+                                    }
+                                    
+                                    if (offStationMatch) {
+                                        var offStation = offStationMatch[1] + '站';
+                                        routeSteps.push('🚌 ↓ <span style="color: #4271B0;">' + offStation + '</span> 下车');
+                                        allStepDescriptions.push('🚌 ↓ ' + offStation);
+                                    }
                                 }
-
-                                if (offStationMatch) {
-                                    var offStation = offStationMatch[1] + '站';
-                                    routeSteps.push('🚌 ↓ <span style="color: #4271B0;">' + offStation + '</span> 下车');
-                                }
-
-
                             }
                         }
-                    }
-
-                    // 获取距离和时间
-                    var distance = route.distance / 1000;
-                    var duration = route.duration;
-                    var minutes = Math.floor(duration / 60);
-                    var hours = Math.floor(minutes / 60);
-                    var remainMinutes = minutes % 60;
-                    var timeStr = '';
-                    if (hours > 0) timeStr += hours + '小时';
-                    if (remainMinutes > 0) timeStr += remainMinutes + '分钟';
-                    if (timeStr === '') timeStr = minutes + '分钟';
-
-                    // ========== 新增：保存路线数据到全局变量 ==========
-                    window.currentRouteData = [];
-                    for (var i = 0; i < allStepDescriptions.length; i++) {
-                        window.currentRouteData.push({
-                            mode: 'transit',
-                            steps: allStepDescriptions,
-                            distance: distance.toFixed(1),
-                            duration: minutes,
-                            stepDetails: allStepDescriptions
-                        });
-                    }
-                    // ================================================
-                    
-                    var html = '<details open style="background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">';
-                    html += '<summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: #2196F3;">🚌 公交/地铁路线</summary>';
-                    html += '<div style="margin-top: 8px; font-size: 12px; line-height: 1.7;">';
-                    html += '<div>📍 起点：' + startName + '</div>';
-                    html += '<div>🏁 终点：' + endName + '</div>';
-                    html += '<div>📏 距离：' + distance.toFixed(2) + ' 公里</div>';
-                    html += '<div>⏱️ 预计时间：' + timeStr + '</div>';
-                    html += '</div></details>';
-
-                    // 乘车方案（默认展开）
-                    html += '<details open style="margin-top: 8px;">';
-                    html += '<summary style="cursor: pointer; color: #2196F3; font-size: 13px; font-weight: 600;">🚌 乘车方案</summary>';
-                    html += '<div style="margin-top: 8px; font-size: 12px; padding-left: 8px;">';
-
-                    for (var i = 0; i < routeSteps.length; i++) {
-                        var step = routeSteps[i];
-                        // 只对线路和站数那一行添加缩进（包含线路名称和站数的行）
-                        if (step.indexOf('</span></div>') !== -1 && step.indexOf('站</span>') !== -1) {
-                            html += '<div style="margin-left: 24px; color: #666;">' + step + '</div>';
-                        } else {
-                            html += '<div style="margin: 6px 0;">' + step + '</div>';
+                        
+                        // 保存路线数据到全局变量（使用第一条方案）
+                        if (r === 0) {
+                            window.currentRouteData = [];
+                            for (var i = 0; i < allStepDescriptions.length; i++) {
+                                window.currentRouteData.push({
+                                    mode: 'transit',
+                                    steps: allStepDescriptions,
+                                    distance: distance.toFixed(1),
+                                    duration: minutes,
+                                    stepDetails: allStepDescriptions
+                                });
+                            }
                         }
-
+                        
+                        // 生成方案详细内容
+                        var routeContent = '<div class="route-detail-content" data-route-index="' + r + '" style="' + (r === 0 ? 'display:block' : 'display:none') + '">';
+                        routeContent += '<details open style="background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">';
+                        routeContent += '<summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: #2196F3;">🚌 公交/地铁路线</summary>';
+                        routeContent += '<div style="margin-top: 8px; font-size: 12px; line-height: 1.7;">';
+                        routeContent += '<div>📍 起点：' + startName + '</div>';
+                        routeContent += '<div>🏁 终点：' + endName + '</div>';
+                        routeContent += '<div>📏 距离：' + distance.toFixed(2) + ' 公里</div>';
+                        routeContent += '<div>⏱️ 预计时间：' + timeStr + '</div>';
+                        routeContent += '</div></details>';
+                        
+                        routeContent += '<details open style="margin-top: 8px;">';
+                        routeContent += '<summary style="cursor: pointer; color: #2196F3; font-size: 13px; font-weight: 600;">🚌 乘车方案</summary>';
+                        routeContent += '<div style="margin-top: 8px; font-size: 12px; padding-left: 8px;">';
+                        
+                        for (var s = 0; s < routeSteps.length; s++) {
+                            var step = routeSteps[s];
+                            if (step.indexOf('</span></div>') !== -1 && step.indexOf('站</span>') !== -1) {
+                                routeContent += '<div style="margin-left: 24px; color: #666;">' + step + '</div>';
+                            } else {
+                                routeContent += '<div style="margin: 6px 0;">' + step + '</div>';
+                            }
+                        }
+                        routeContent += '</div></details></div>';
+                        
+                        // 合并同站上下车
+                        routeContent = routeContent.replace(/🚌 ↓ <span style="color: #4271B0;">(.*?)<\/span> 下车<\/div><div style="margin: 6px 0;">🚌 ↑ <span style="color: #4271B0;">\1<\/span> 上车/g, '<div style="margin: 6px 0;">🔄 <span style="color: #FF9800;">$1 换乘</span>');
+                        
+                        var container = document.getElementById('routesContainer');
+                        if (container) {
+                            container.insertAdjacentHTML('beforeend', routeContent);
+                        }
                     }
-
-                    // 合并同站上下车
-                    html = html.replace(/🚌 ↓ <span style="color: #4271B0;">(.*?)<\/span> 下车<\/div><div style="margin: 6px 0;">🚌 ↑ <span style="color: #4271B0;">\1<\/span> 上车/g, '<div style="margin: 6px 0;">🔄 <span style="color: #FF9800;">$1 换乘</span>');
-                    document.getElementById('distanceResult').innerHTML = html;
-                    // drawDistanceLine(s.lat, s.lng, e.lat, e.lng, distance);
-
-                    // 自动绘制公交路线
-                    drawFullRoute();
                     
-                } else {
+                    // 绑定 Tab 切换事件
+                    var routeTabs = document.querySelectorAll('.route-tab');
+                    for (var t = 0; t < routeTabs.length; t++) {
+                        routeTabs[t].onclick = function() {
+                            var idx = this.getAttribute('data-route-index');
+                            // 更新 Tab 样式
+                            for (var tt = 0; tt < routeTabs.length; tt++) {
+                                routeTabs[tt].style.background = '#e0e0e0';
+                                routeTabs[tt].style.color = '#666';
+                            }
+                            this.style.background = '#2196F3';
+                            this.style.color = 'white';
+                            // 显示对应方案内容
+                            var contents = document.querySelectorAll('.route-detail-content');
+                            for (var cc = 0; cc < contents.length; cc++) {
+                                contents[cc].style.display = 'none';
+                            }
+                            var targetContent = document.querySelector('.route-detail-content[data-route-index="' + idx + '"]');
+                            if (targetContent) targetContent.style.display = 'block';
+                        };
+                    }
+                    
+                    drawFullRoute();
+                }else {
                     var errorMsg = data.message || '未知错误';
                     document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">公交路线规划失败: ' + errorMsg + '</span>';
                 }
@@ -2156,6 +2283,10 @@
             // 使用服务端 AK 调用 Web API
             var script = document.createElement('script');
             script.src = `https://api.map.baidu.com/direction/v2/transit?origin=${s.lat},${s.lng}&destination=${e.lat},${e.lng}&ak=${BAIDU_SERVER_AK}&output=json&callback=${callbackName}`;
+
+            window.lastTransitUrl = script.src;
+            console.log('请求URL:', script.src);
+
             script.onerror = function() {
                 document.getElementById('distanceResult').innerHTML = '<strong>📊 计算结果：</strong><br><span class="error">公交路线请求失败，请检查服务端AK配置</span>';
                 delete window[callbackName];
@@ -4259,7 +4390,7 @@
         // 初始化地图
         function initMap() {
             map = new BMap.Map('map');
-            map.centerAndZoom(new BMap.Point(118.15, 29.78), 10);
+            map.centerAndZoom(new BMap.Point(116.404, 39.915), 10);
             map.enableScrollWheelZoom();
             map.addControl(new BMap.NavigationControl());
             
@@ -4832,7 +4963,7 @@
             var versionSpan = document.getElementById('versionNumber');
             var updateBadge = document.getElementById('updateBadge');
             var versionInfo = document.getElementById('versionInfo');
-            var APP_VERSION = '20260424.01';
+            var APP_VERSION = '20260428.01';
             
             if (versionSpan) {
                 versionSpan.innerText = APP_VERSION;
