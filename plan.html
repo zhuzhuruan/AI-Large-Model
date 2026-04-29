@@ -1131,7 +1131,7 @@
                     // 保存步行数据供全局使用
                     window.walkPointsData = walkPointsData;
                 }
-                
+
                 callback({
                     success: true,
                     distance: distance,
@@ -1153,8 +1153,258 @@
         };
         document.head.appendChild(script);
     }
+
+    // 添加图片到景点
+    function addImageToSpot(spotId, imageData) {
+        var detail = getTripDetail(currentTripId);
+        for (var d = 0; d < detail.days.length; d++) {
+            for (var s = 0; s < detail.days[d].spots.length; s++) {
+                if (detail.days[d].spots[s].id === spotId) {
+                    if (!detail.days[d].spots[s].images) {
+                        detail.days[d].spots[s].images = [];
+                    }
+                    detail.days[d].spots[s].images.push(imageData);
+                    saveTripDetail(currentTripId, detail);
+                    renderDetailContent(detail);
+                    showToast('图片已添加');
+                    return;
+                }
+            }
+        }
+    }
+
+    // 查看大图（支持轮播）
+    var currentImageList = [];
+    var currentImageIndex = 0;
+
+    function viewImage(src, spotId, imgIndex) {
+        // 获取该景点的所有图片
+        var detail = getTripDetail(currentTripId);
+        var images = [];
+        for (var d = 0; d < detail.days.length; d++) {
+            for (var s = 0; s < detail.days[d].spots.length; s++) {
+                if (detail.days[d].spots[s].id === spotId) {
+                    images = detail.days[d].spots[s].images || [];
+                    break;
+                }
+            }
+        }
+        
+        currentImageList = images;
+        currentImageIndex = imgIndex;
+        
+        showImageViewer();
+    }
+
+    function showImageViewer() {
+        // 移除已有的查看器
+        var existingViewer = document.getElementById('imageViewer');
+        if (existingViewer) existingViewer.remove();
+        
+        var overlay = document.createElement('div');
+        overlay.id = 'imageViewer';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:20000;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+        
+        // 图片容器
+        var imgContainer = document.createElement('div');
+        imgContainer.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;width:100%;';
+        
+        var img = document.createElement('img');
+        img.src = currentImageList[currentImageIndex];
+        img.style.cssText = 'max-width:85%;max-height:70vh;border-radius:8px;object-fit:contain;';
+        
+        // 上一张按钮
+        var prevBtn = document.createElement('button');
+        prevBtn.innerHTML = '‹';
+        prevBtn.style.cssText = 'position:absolute;left:10px;background:rgba(0,0,0,0.5);color:white;border:none;width:40px;height:60px;border-radius:8px;font-size:36px;cursor:pointer;z-index:20001;';
+        prevBtn.onclick = function(e) {
+            e.stopPropagation();
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                img.src = currentImageList[currentImageIndex];
+                updateCounter();
+            }
+        };
+        
+        // 下一张按钮
+        var nextBtn = document.createElement('button');
+        nextBtn.innerHTML = '›';
+        nextBtn.style.cssText = 'position:absolute;right:10px;background:rgba(0,0,0,0.5);color:white;border:none;width:40px;height:60px;border-radius:8px;font-size:36px;cursor:pointer;z-index:20001;';
+        nextBtn.onclick = function(e) {
+            e.stopPropagation();
+            if (currentImageIndex < currentImageList.length - 1) {
+                currentImageIndex++;
+                img.src = currentImageList[currentImageIndex];
+                updateCounter();
+            }
+        };
+        
+        // 计数器
+        var counter = document.createElement('div');
+        counter.id = 'imageCounter';
+        counter.style.cssText = 'margin-top:20px;color:white;font-size:16px;background:rgba(0,0,0,0.5);padding:4px 12px;border-radius:20px;';
+        counter.innerText = (currentImageIndex + 1) + ' / ' + currentImageList.length;
+        
+        // 关闭按钮
+        var closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '✕';
+        closeBtn.style.cssText = 'position:absolute;top:20px;right:20px;background:rgba(0,0,0,0.5);color:white;border:none;width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer;z-index:20001;';
+        closeBtn.onclick = function() {
+            overlay.remove();
+        };
+        
+        function updateCounter() {
+            counter.innerText = (currentImageIndex + 1) + ' / ' + currentImageList.length;
+            prevBtn.style.opacity = currentImageIndex === 0 ? '0.3' : '1';
+            nextBtn.style.opacity = currentImageIndex === currentImageList.length - 1 ? '0.3' : '1';
+        }
+        updateCounter();
+        
+        // 添加触摸滑动支持
+        var touchStartX = 0;
+        var touchEndX = 0;
+        
+        imgContainer.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        imgContainer.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX < touchStartX - 50 && currentImageIndex < currentImageList.length - 1) {
+                currentImageIndex++;
+                img.src = currentImageList[currentImageIndex];
+                updateCounter();
+            } else if (touchEndX > touchStartX + 50 && currentImageIndex > 0) {
+                currentImageIndex--;
+                img.src = currentImageList[currentImageIndex];
+                updateCounter();
+            }
+        });
+        
+        imgContainer.appendChild(prevBtn);
+        imgContainer.appendChild(img);
+        imgContainer.appendChild(nextBtn);
+        overlay.appendChild(imgContainer);
+        overlay.appendChild(counter);
+        overlay.appendChild(closeBtn);
+        
+        overlay.onclick = function(e) {
+            if (e.target === overlay) overlay.remove();
+        };
+        
+        document.body.appendChild(overlay);
+    }
+
+    // 添加图片直接上传
+    function addImageDirectly(spotId) {
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.multiple = true;
+        fileInput.onchange = function(event) {
+            var files = event.target.files;
+            if (files && files.length > 0) {
+                showToast('正在处理 ' + files.length + ' 张图片...');
+                var pendingCount = files.length;
+                var completedCount = 0;
+                for (var f = 0; f < files.length; f++) {
+                    var file = files[f];
+                    var reader = new FileReader();
+                    reader.onload = (function() {
+                        return function(e) {
+                            compressImage(e.target.result, 0.7, function(compressedData) {
+                                addImageToSpotNoRender(spotId, compressedData, function() {
+                                    completedCount++;
+                                    if (completedCount === pendingCount) {
+                                        var detail = getTripDetail(currentTripId);
+                                        renderDetailContent(detail);
+                                        showToast('已添加 ' + pendingCount + ' 张图片');
+                                    }
+                                });
+                            });
+                        };
+                    })();
+                    reader.readAsDataURL(file);
+                }
+            }
+        };
+        fileInput.click();
+    }
+
+    // 压缩图片
+    function compressImage(dataUrl, quality, callback) {
+        var img = new Image();
+        img.onload = function() {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            
+            // 最大宽高限制（可选，限制为 800px）
+            var maxWidth = 800;
+            var maxHeight = 800;
+            var width = img.width;
+            var height = img.height;
+            
+            if (width > height) {
+                if (width > maxWidth) {
+                    height = Math.round(height * maxWidth / width);
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width = Math.round(width * maxHeight / height);
+                    height = maxHeight;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // 压缩质量 0-1
+            var compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            callback(compressedDataUrl);
+        };
+        img.src = dataUrl;
+    }
+
+    // 删除图片
+    function deleteImageFromSpot(spotId, imgIndex) {
+        var detail = getTripDetail(currentTripId);
+        for (var d = 0; d < detail.days.length; d++) {
+            for (var s = 0; s < detail.days[d].spots.length; s++) {
+                if (detail.days[d].spots[s].id === spotId) {
+                    if (detail.days[d].spots[s].images && detail.days[d].spots[s].images.length > imgIndex) {
+                        detail.days[d].spots[s].images.splice(imgIndex, 1);
+                        saveTripDetail(currentTripId, detail);
+                        renderDetailContent(detail);
+                        showToast('图片已删除');
+                    }
+                    return;
+                }
+            }
+        }
+    }
+
+    // 添加不刷新的版本
+    function addImageToSpotNoRender(spotId, imageData, callback) {
+        var detail = getTripDetail(currentTripId);
+        for (var d = 0; d < detail.days.length; d++) {
+            for (var s = 0; s < detail.days[d].spots.length; s++) {
+                if (detail.days[d].spots[s].id === spotId) {
+                    if (!detail.days[d].spots[s].images) {
+                        detail.days[d].spots[s].images = [];
+                    }
+                    detail.days[d].spots[s].images.push(imageData);
+                    saveTripDetail(currentTripId, detail);
+                    if (callback) callback();
+                    return;
+                }
+            }
+        }
+    }
     
     // 渲染行程详情（不刷新整个页面）
+    var imageExpandState = {};
     function renderDetailContent(detail) {
         var container = document.getElementById('detailContent');
         var titleSpan = document.getElementById('detailTitle');
@@ -1186,9 +1436,10 @@
 
                 // 改为（添加删除按钮）
                 html += '<div class="spot-header">';
-                html += '<div class="spot-name">';
+                html += '<div class="spot-name" style="display:flex; align-items:center; gap:8px;">';
                 html += '<span class="drag-handle">⋮⋮</span>';
                 html += '<span>' + spot.name + '</span>';
+                html += '<span class="add-image-icon" data-spot-id="' + spot.id + '" style="cursor:pointer; color:#999; font-size:14px;">📷</span>';
                 html += '</div>';
                 html += '<div style="display:flex; align-items:center; gap:8px;">';
                 html += '<div class="spot-time" onclick="event.stopPropagation(); editSpotTime(\'' + spot.id + '\')">🕐 ' + spot.arrivalTime + '</div>';
@@ -1205,7 +1456,63 @@
                     html += '<div class="spot-note" style="color:#ccc;" onclick="event.stopPropagation(); editSpotNote(\'' + spot.id + '\')">+ 添加备注</div>';
                 }
                 html += '</div>';
-                
+
+                // 图片区域（可折叠）
+                // 绑定图片区域展开/收起
+                var imageWrappers = document.querySelectorAll('.spot-images-wrapper');
+                for (var i = 0; i < imageWrappers.length; i++) {
+                    var header = imageWrappers[i].querySelector('.images-header');
+                    var content = imageWrappers[i].querySelector('.images-content');
+                    var spotId = imageWrappers[i].getAttribute('data-spot-id');
+                    
+                    header.onclick = function(e) {
+                        e.stopPropagation();
+                        var wrapper = this.parentElement;
+                        var contentDiv = wrapper.querySelector('.images-content');
+                        var toggleSpan = this.querySelector('.images-toggle');
+                        var spotIdAttr = wrapper.getAttribute('data-spot-id');
+                        
+                        if (contentDiv.style.display === 'none') {
+                            contentDiv.style.display = 'block';
+                            toggleSpan.innerText = '收起';
+                            imageExpandState[spotIdAttr] = true;
+                        } else {
+                            contentDiv.style.display = 'none';
+                            toggleSpan.innerText = '展开';
+                            imageExpandState[spotIdAttr] = false;
+                        }
+                    };
+                }
+
+                // 图片区域（可折叠）
+                if (spot.images && spot.images.length > 0) {
+                    // 判断是否有保存的展开状态
+                    var isExpanded = imageExpandState[spot.id] !== false; // 默认展开
+                    
+                    html += '<div class="spot-images-wrapper" data-spot-id="' + spot.id + '" style="margin-top: 8px;">';
+                    html += '<div class="images-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 4px 0;">';
+                    html += '<span style="font-size: 12px; color: #666;">📸 图片 (' + spot.images.length + '张)</span>';
+                    html += '<span class="images-toggle" style="font-size: 12px; color: #2196F3;">' + (isExpanded ? '收起' : '展开') + '</span>';
+                    html += '</div>';
+                    html += '<div class="images-content" style="display: ' + (isExpanded ? 'block' : 'none') + '; margin-top: 8px;">';
+                    html += '<div class="image-list" style="display: flex; gap: 8px; overflow-x: auto; padding: 4px 0;">';
+                    
+                    for (var imgIdx = 0; imgIdx < spot.images.length; imgIdx++) {
+                        var img = spot.images[imgIdx];
+                        var imgData = typeof img === 'string' ? img : img.data;
+                        html += '<div class="image-item" style="position: relative; min-width: 60px; height: 60px;">';
+                        html += '<img src="' + imgData + '" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer;" data-spot-id="' + spot.id + '" data-img-index="' + imgIdx + '">';
+                        html += '<button class="delete-image-btn" data-spot-id="' + spot.id + '" data-img-index="' + imgIdx + '" style="position: absolute; top: -5px; right: -5px; background: #f44336; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer;">✕</button>';
+                        html += '</div>';
+                    }
+                    // 添加"+"按钮
+                    html += '<button class="add-image-btn-inline" data-spot-id="' + spot.id + '" style="min-width: 60px; height: 60px; background: #f0f0f0; border: 1px dashed #ccc; border-radius: 8px; font-size: 24px; cursor: pointer;">+</button>';
+                    
+                    html += '</div>';
+                    html += '</div>';
+                    html += '</div>';
+                }
+
                 // 交通方式（非最后一个景点）
                 if (s < day.spots.length - 1) {
                     var nextSpot = day.spots[s + 1];
@@ -1250,6 +1557,19 @@
             addSpotBtns[i].onclick = function() {
                 var dayIndex = parseInt(this.getAttribute('data-day-index'));
                 showAddSpotDialog(dayIndex);
+            };
+        }
+
+        // 绑定删除图片按钮
+        var deleteImageBtns = document.querySelectorAll('.delete-image-btn');
+        for (var i = 0; i < deleteImageBtns.length; i++) {
+            deleteImageBtns[i].onclick = function(e) {
+                e.stopPropagation();
+                var spotId = this.getAttribute('data-spot-id');
+                var imgIndex = parseInt(this.getAttribute('data-img-index'));
+                if (confirm('确定要删除这张图片吗？')) {
+                    deleteImageFromSpot(spotId, imgIndex);
+                }
             };
         }
         
@@ -1369,6 +1689,121 @@
                         }
                     }.bind(this)
                 );
+            };
+        }
+
+        // 绑定图片区域展开/收起
+        var imageHeaders = document.querySelectorAll('.images-header');
+        for (var i = 0; i < imageHeaders.length; i++) {
+            imageHeaders[i].onclick = function(e) {
+                e.stopPropagation();
+                var spotId = this.parentElement.getAttribute('data-spot-id');
+                var content = this.nextElementSibling;
+                var toggleSpan = this.querySelector('.images-toggle');
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    toggleSpan.innerText = '收起';
+                    imageExpandState[spotId] = true;
+                } else {
+                    content.style.display = 'none';
+                    toggleSpan.innerText = '展开';
+                    imageExpandState[spotId] = false;
+                }
+            };
+        }
+
+        // 绑定内联添加图片按钮
+        var addImageInlineBtns = document.querySelectorAll('.add-image-btn-inline');
+        for (var i = 0; i < addImageInlineBtns.length; i++) {
+            addImageInlineBtns[i].onclick = function(e) {
+                e.stopPropagation();
+                var spotId = this.getAttribute('data-spot-id');
+                        
+                        var fileInput = document.createElement('input');
+                        fileInput.type = 'file';
+                        fileInput.accept = 'image/*';
+                        fileInput.multiple = true;
+                        fileInput.onchange = function(event) {
+                            var files = event.target.files;
+                            if (files && files.length > 0) {
+                                showToast('正在处理 ' + files.length + ' 张图片...');
+                                var pendingCount = files.length;
+                                var completedCount = 0;
+                                for (var f = 0; f < files.length; f++) {
+                                    var file = files[f];
+                                    var reader = new FileReader();
+                                    reader.onload = (function(file) {
+                                        return function(e) {
+                                            compressImage(e.target.result, 0.7, function(compressedData) {
+                                                addImageToSpotNoRender(spotId, compressedData, function() {
+                                                    completedCount++;
+                                                    if (completedCount === pendingCount) {
+                                                        var detail = getTripDetail(currentTripId);
+                                                        renderDetailContent(detail);
+                                                        showToast('已添加 ' + pendingCount + ' 张图片');
+                                                    }
+                                                });
+                                            });
+                                        };
+                                    })(file);
+                                    reader.readAsDataURL(file);
+                                }
+                            }
+                        };
+                        fileInput.click();
+                    };
+                }
+
+        // 绑定相机图标点击事件（添加图片）
+        var addImageIcons = document.querySelectorAll('.add-image-icon');
+        for (var i = 0; i < addImageIcons.length; i++) {
+            addImageIcons[i].onclick = function(e) {
+                e.stopPropagation();
+                var spotId = this.getAttribute('data-spot-id');
+                
+                var fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.multiple = true;
+                fileInput.onchange = function(event) {
+                    var files = event.target.files;
+                    if (files && files.length > 0) {
+                        showToast('正在处理 ' + files.length + ' 张图片...');
+                        var pendingCount = files.length;
+                        var completedCount = 0;
+                        for (var f = 0; f < files.length; f++) {
+                            var file = files[f];
+                            var reader = new FileReader();
+                            reader.onload = (function(file) {
+                                return function(e) {
+                                    compressImage(e.target.result, 0.7, function(compressedData) {
+                                        addImageToSpotNoRender(spotId, compressedData, function() {
+                                            completedCount++;
+                                            if (completedCount === pendingCount) {
+                                                var detail = getTripDetail(currentTripId);
+                                                renderDetailContent(detail);
+                                                showToast('已添加 ' + pendingCount + ' 张图片');
+                                            }
+                                        });
+                                    });
+                                };
+                            })(file);
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                };
+                fileInput.click();
+            };
+        }
+
+        // 绑定图片点击查看大图
+        var spotImages = document.querySelectorAll('.image-item img');
+        for (var i = 0; i < spotImages.length; i++) {
+            spotImages[i].onclick = function(e) {
+                e.stopPropagation();
+                var spotId = this.getAttribute('data-spot-id');
+                var imgIndex = parseInt(this.getAttribute('data-img-index'));
+                viewImage(this.src, spotId, imgIndex);
             };
         }
 
