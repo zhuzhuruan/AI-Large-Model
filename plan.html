@@ -1404,6 +1404,48 @@
         }
     }
 
+    // 添加更新到备注
+    function updateSpotNotes(spotId, newText) {
+        var detail = getTripDetail(currentTripId);
+        for (var d = 0; d < detail.days.length; d++) {
+            for (var s = 0; s < detail.days[d].spots.length; s++) {
+                if (detail.days[d].spots[s].id === spotId) {
+                    // 兼容旧数据结构
+                    if (!detail.days[d].spots[s].notes) {
+                        detail.days[d].spots[s].notes = { text: '', links: [], checklist: [], attachments: [] };
+                    }
+                    detail.days[d].spots[s].notes.text = newText;
+                    // 删除旧的 note 字段
+                    if (detail.days[d].spots[s].note) delete detail.days[d].spots[s].note;
+                    saveTripDetail(currentTripId, detail);
+                    renderDetailContent(detail);
+                    showToast('备注已更新');
+                    return;
+                }
+            }
+        }
+    }
+
+    // 清空备注
+    function updateSpotNotes(spotId, newText) {
+        var detail = getTripDetail(currentTripId);
+        for (var d = 0; d < detail.days.length; d++) {
+            for (var s = 0; s < detail.days[d].spots.length; s++) {
+                if (detail.days[d].spots[s].id === spotId) {
+                    if (!detail.days[d].spots[s].notes) {
+                        detail.days[d].spots[s].notes = { text: '', links: [], checklist: [], attachments: [] };
+                    }
+                    detail.days[d].spots[s].notes.text = newText;
+                    if (detail.days[d].spots[s].note) delete detail.days[d].spots[s].note;
+                    saveTripDetail(currentTripId, detail);
+                    renderDetailContent(detail);
+                    showToast(newText ? '备注已更新' : '备注已清空');
+                    return;
+                }
+            }
+        }
+    }
+
     // 导出当前行程为 PDF
     function exportTripToPDF(tripId) {
         var detail = getTripDetail(tripId);
@@ -1775,6 +1817,7 @@
     
     // 渲染行程详情（不刷新整个页面）
     var imageExpandState = {};
+    var notesExpandState = {};
     function renderDetailContent(detail) {
         var container = document.getElementById('detailContent');
         var titleSpan = document.getElementById('detailTitle');
@@ -1810,7 +1853,9 @@
                 html += '<span class="drag-handle">⋮⋮</span>';
                 html += '<span>' + spot.name + '</span>';
                 html += '<span class="add-image-icon" data-spot-id="' + spot.id + '" style="cursor:pointer; color:#999; font-size:14px;">📷</span>';
+                html += '<span class="add-note-icon" data-spot-id="' + spot.id + '" style="cursor:pointer; color:#999; font-size:16px;">📝</span>';
                 html += '</div>';
+
                 html += '<div style="display:flex; align-items:center; gap:8px;">';
                 html += '<div class="spot-time" onclick="event.stopPropagation(); editSpotTime(\'' + spot.id + '\')">🕐 ' + spot.arrivalTime + '</div>';
                 html += '<span class="delete-spot" data-spot-id="' + spot.id + '" data-day-index="' + d + '" data-spot-name="' + spot.name.replace(/'/g, "\\'") + '" style="cursor:pointer; color:#f44336; font-size:14px;">🗑️</span>';
@@ -1820,12 +1865,24 @@
                 html += '<div class="spot-detail">';
                 html += '<div>⏱️ 游玩时长: ' + Math.floor(spot.duration / 60) + '小时' + (spot.duration % 60 ? (spot.duration % 60 + '分钟') : '') + ' <span class="edit-icon" onclick="event.stopPropagation(); editSpotDuration(\'' + spot.id + '\')">✏️</span></div>';
                 html += '<div>💰 预算: ¥' + spot.cost + ' <span class="edit-icon" onclick="event.stopPropagation(); editSpotCost(\'' + spot.id + '\')">✏️</span></div>';
-                if (spot.note) {
-                    html += '<div class="spot-note">📝 ' + spot.note + ' <span class="edit-icon" onclick="event.stopPropagation(); editSpotNote(\'' + spot.id + '\')">✏️</span></div>';
-                } else {
-                    html += '<div class="spot-note" style="color:#ccc;" onclick="event.stopPropagation(); editSpotNote(\'' + spot.id + '\')">+ 添加备注</div>';
+                // 备注区域（可折叠）
+                // 备注区域（只有有内容时才显示）
+                var notesText = (spot.notes && spot.notes.text) ? spot.notes.text : (spot.note || '');
+                if (notesText) {
+                    var isNotesExpanded = notesExpandState[spot.id] || false;
+                    html += '<div class="spot-notes-wrapper" data-spot-id="' + spot.id + '" style="margin-top: 8px;">';
+                    html += '<div class="notes-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 4px 0;">';
+                    html += '<span style="font-size: 12px; color: #666;">📝 备注</span>';
+                    html += '<div style="display: flex; gap: 8px;">';
+                    html += '<span class="notes-toggle" style="font-size: 12px; color: #2196F3;">' + (isNotesExpanded ? '收起' : '展开') + '</span>';
+                    html += '<span class="clear-note-icon" data-spot-id="' + spot.id + '" style="font-size: 12px; color: #f44336; cursor: pointer;">清空</span>';
+                    html += '</div>';
+                    html += '</div>';
+                    html += '<div class="notes-content" style="display: ' + (isNotesExpanded ? 'block' : 'none') + '; margin-top: 8px;">';
+                    html += '<div class="notes-text" style="padding: 8px; background: #f8f9fa; border-radius: 8px; font-size: 13px; word-wrap: break-word; white-space: pre-wrap;">' + notesText + '</div>';
+                    html += '</div>';
+                    html += '</div>';
                 }
-                html += '</div>';
 
                 // 图片区域（可折叠）
                 // 绑定图片区域展开/收起
@@ -2199,6 +2256,52 @@
             };
         }
 
+        // 绑定添加备注图标
+        var addNoteIcons = document.querySelectorAll('.add-note-icon');
+        for (var i = 0; i < addNoteIcons.length; i++) {
+            addNoteIcons[i].onclick = function(e) {
+                e.stopPropagation();
+                var spotId = this.getAttribute('data-spot-id');
+                var newText = prompt('请输入备注', '');
+                if (newText !== null && newText.trim() !== '') {
+                    updateSpotNotes(spotId, newText);
+                }
+            };
+        }
+
+        // 绑定清空备注按钮
+        var clearNoteBtns = document.querySelectorAll('.clear-note-icon');
+        for (var i = 0; i < clearNoteBtns.length; i++) {
+            clearNoteBtns[i].onclick = function(e) {
+                e.stopPropagation();
+                var spotId = this.getAttribute('data-spot-id');
+                if (confirm('确定要清空备注吗？')) {
+                    updateSpotNotes(spotId, '');
+                }
+            };
+        }
+
+        
+        // 绑定备注区域展开/收起
+        var notesHeaders = document.querySelectorAll('.notes-header');
+        for (var i = 0; i < notesHeaders.length; i++) {
+            notesHeaders[i].onclick = function(e) {
+                e.stopPropagation();
+                var wrapper = this.parentElement;
+                var content = wrapper.querySelector('.notes-content');
+                var toggleSpan = this.querySelector('.notes-toggle');
+                var spotId = wrapper.getAttribute('data-spot-id');
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    toggleSpan.innerText = '收起';
+                    notesExpandState[spotId] = true;
+                } else {
+                    content.style.display = 'none';
+                    toggleSpan.innerText = '展开';
+                    notesExpandState[spotId] = false;
+                }
+            };
+        }
 
         // ========== 新增：页面加载时自动触发路线获取 ==========
         for (var i = 0; i < transportSelects.length; i++) {
@@ -2323,23 +2426,14 @@
     }
     
     // 编辑备注
-    function editSpotNote(spotId) {
-        var detail = getTripDetail(currentTripId);
-        for (var i = 0; i < detail.days.length; i++) {
-            for (var j = 0; j < detail.days[i].spots.length; j++) {
-                if (detail.days[i].spots[j].id === spotId) {
-                    var input = prompt('请输入备注', detail.days[i].spots[j].note || '');
-                    if (input !== null) {
-                        detail.days[i].spots[j].note = input;
-                        saveTripDetail(currentTripId, detail);
-                        renderDetailContent(detail);
-                    }
-                    return;
-                }
-            }
+    function editNote(spotId, element) {
+        var currentText = element.innerText === '点击添加备注...' ? '' : element.innerText;
+        var newText = prompt('请输入备注（支持多行，用换行分隔）', currentText);
+        if (newText !== null) {
+            updateSpotNotes(spotId, newText);
         }
     }
-    
+        
     // 编辑行程名称
     function editTripName() {
         var detail = getTripDetail(currentTripId);
